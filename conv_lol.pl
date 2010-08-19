@@ -1,18 +1,30 @@
 #!/usr/bin/perl
-
-#use utf8;
+#
+# This perl script extracts data from the unformatted
+# List of Lights into a formatted from.
+# Run `conv_lol.pl < list.txt | grep LIGHT: > list.csv`.
+#
+# The List of Lights has to converted into text before.
+# The conversion should be done with `pdftotext -raw`.
+#
+# @author Bernhard R. Fischer <bf@abenteuerland.at>
+#
 
 # line buffer keeps last 4 lines
 @lbuf = ("", "", "", "");
 $lcnt = 0;
+$icnt = 0;
 
 while (<>)
 {
    $lcnt++;
+   $match = 0;
    chomp;
 
    # append rest of previous line
    if ($su) { $_ = "$su$_"; }
+
+   print "{$_}\n";
 
    # skip page breaks
    if (/\f/) { next; }
@@ -26,7 +38,10 @@ while (<>)
    if (/(.*):$/)
    {
       print "SECTION: ";
+      $osection = $section;
       $section = $1;
+      undef $su;
+      $match = 1;
    }
 
    # This detects the international light number.
@@ -42,8 +57,10 @@ while (<>)
       # output
       print "LIGHT:\t";
       # Is it the first line?
-      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tNAME\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tWHISTLE\tRACON\tSAFE_WATER\n"; }
-      else { print "$intnr\t$uslnr\t$section\t$name\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$whistle\t$racon\t$sw\n"; }
+      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tNAME\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
+      else { print "$intnr\t$uslnr\t$osection\t$name\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$whistle\t$racon\t$sw\t$struct\n"; }
+
+      if ($section ne $osection) { $osection = $section; }
 
       # clear variables to reduce risk of detection errors.
       $name = "";
@@ -64,11 +81,13 @@ while (<>)
       undef $latd;
       undef $lond;
       undef $racon;
-      undef $su;
       undef $sw;
+      undef $struct;
+      $icnt = 0;
 
       $intnr = $_;
       $uslnr = $lbuf[0];
+      $match = 1;
       print "USLNR: $uslnr, INTNR: ";
    }
 
@@ -87,6 +106,7 @@ while (<>)
          $latd = $5 / 60.0 + $4;
          if ($6 eq "S") { $latd = -$latd; }
          #$latd =~ s/\./,/;
+         $match = 1;
       }
    }
    if (/([0-9]{1,3})° ([0-9]{2,2}\.[0-9])´ ([EW])/)
@@ -98,16 +118,19 @@ while (<>)
          $lond = $2 / 60.0 + int($1);
          if ($3 eq "W") { $lond = -$lond; }
          #$lond =~ s/\./,/;
+         $match = 1;
       }
    }
 
    #elsif (/^(([0-9] )?(Al\.|Dir\.)?([FLVIWRGU]\.)?([WRG]|F|Q|Mo|Oc|Fl|Iso|I)\.(\([A-Z0-9\+]+\))?(\+(([LV]\.)?(F|Q|Mo|Oc|Fl|Iso|I)\.))?(([RGWY]|Vi|Bu|Or)\.){1,3}( \([a-z]+\.\))?)[ ]*(.*)/)
-   if (/^((([0-9]) )?((\([A-Z0-9\+]+\))?\+?[A-Z][a-z]{0,2}\.)+( \([a-z]+\.\))?)([ ]+(.*))?/)
+   if (/^((([0-9]) )?((\([A-Z0-9\+]+\))?\+?[A-Z][a-z]{0,2}\.)+( \([a-z]+\.\))?)([ ]+(.*))?/ && $lon)
    {
       unless ($char)
       {
          $char = $1;
+         $icnt = 3;
          print "CHAR: ($8) ";
+         $match = 1;
          if ($8 =~ /^([0-9]+)$/)
          { 
             $hf = $1; 
@@ -125,6 +148,7 @@ while (<>)
          { 
             $hf = $_; 
             $hfl = $lcnt;
+            $match = 1;
             print "HEIGHT [ft]: ";
          }
          else
@@ -133,6 +157,7 @@ while (<>)
             { 
                $hm = $_; 
                $hml = $lcnt;
+               $match = 1;
                print "HEIGHT [m]: ";
             } 
          }
@@ -145,19 +170,41 @@ while (<>)
       unless ($range) { $range = $_; }
       else { $range = "$range, $_"; }
       $rnl = $lcnt;
+      $match = 1;
       print "RANGE: ";
+   }
+
+   if ($stcont)
+   {
+      if (/([^\.]*\.)/)
+      {
+         $struct = "$struct $1";
+         undef $stcont;
+         $match = 1;
+         print "STRUCT END: ";
+      }
    }
 
    # Detect plain range:
    if ($char)
    {
-   if (/^([0-9]+) .*/)
+   if (/^([0-9]+) (.*)/)
    {
       unless ($range)
       {
          $range = $1;
          $rnl = $lcnt;
+         $struct = $2;
+         $icnt = 9;
+         $match = 1;
          print "RANGE: ($1) ";
+         if ($struct =~ /[^\.]/)
+         {
+            print "STRUCT cont'd ";
+            $stcont = 1;
+         }
+         else { undef $stcont; }
+
       }
    }
    }
@@ -169,6 +216,7 @@ while (<>)
       # detect end of "Horn"
       if (/\)\./) { $hu = 0; }
       $horn = "$horn $_";
+      $match = 1;
       print "HORN (cont'd) ";
    }
 
@@ -176,6 +224,7 @@ while (<>)
    if (/.*?Horn: (.*)/)
    {
       $horn = $1;
+      $match = 1;
       print "HORN: ($1) ";
       if ($horn =~ /(\([^\)]*$)/) { $hu = 1; }
       else { $hu = 0; }
@@ -186,43 +235,81 @@ while (<>)
    if (/Whistle\./)
    {
       $whistle = "yes";
+      $match = 1;
       print "WHISTLE: ";
    }
 
    if (/period ([0-9]+)s/)
    {
       $per = $1;
+      $icnt = 4;
+      $match = 1;
       print "PERIOD: ";
    }
 
-   if (/fl\. ([0-9\.]+)s, ec\. ([0-9\.]+)s/)
+   if (/(fl|lt)\. ([0-9\.]+)s, ec\. ([0-9\.]+)s/)
    {
-      unless ($group) { $group = "$1,($2)"; }
-      else { $group = "$group,$1,($2)"; }
+      unless ($group) { $group = "$2,($3)"; }
+      else { $group = "$group,$2,($3)"; }
+      $icnt = 5;
+      $match = 1;
       print "GROUP: ";
    }
 
    #while (/(([WRG]\.[ ]?)?(([0-9]{3}°([0-9]{2}′)?)|obsc\.)?-([0-9]{3}°([0-9]{2}′)?))(.)(.*)/)
    if ($name)
    {
+      undef $whloop;
    while (/(([WRG]\.|[A-Za-z]+)?[ ]?(([0-9]{3}°([0-9]{2}′)?)|[A-Za-z\.]*)?-([0-9]{3}°([0-9]{2}′)?))(.)(.*)/)
    {
+      $whloop = 1;
       unless ($sector) { $sector = $1; }
       else { $sector = "$sector,$1"; }
+      $match = 1;
 
-      if ($8 eq ",")
+      print "SECTOR: ($1) ($2) ($3) ($4) ($5) ($6) ($7) ($8) ($9) ";
+      $del = $8;
+      print " \\$1$8\\ ";
+      s/\Q$1$8\E//;
+
+      if (($del eq ",") || ($del eq " "))
       { 
-         $su = $9;
+         $su = $_;
          print "SECTOR cont'd "; 
       }
       else 
       { 
          undef $su;
-         print "SECTOR END"; 
+         print "SECTOR END "; 
       }
-      print "SECTOR: ($1) ($2) ($3) ($4) ($5) ($6) ($7) ($8) ($9) ";
-      s/$1//;
+      print " :$_: ";
    }
+
+      if ($su =~ /([^\.]+\.)$/)
+      {
+         $sector = "$sector,$1";
+         undef $su;
+         $match = 1;
+         print "NONSECTOR END ";
+      }
+
+      if ($su && !$whloop)
+      {
+         $sector = "$sector,$_";
+         undef $su;
+         $match = 1;
+         print "NONSECTOR END ";
+      }
+
+      if (!$su && $whloop)
+      { 
+         print "NOT_SECTOR: \"\"$_\"\""; 
+         if (/([^\.]+[\.])/)
+         {
+            $struct = $1;
+            print "STRUCT: ";
+         }
+      }
    }
 
    if (/SAFE WATER/)
@@ -235,10 +322,27 @@ while (<>)
    if (/^[\-]*RACON (.*)/)
    {
       $racon = $1;
+      $match = 1;
       print "RACON: ";
    }
 
-   print "$_\n";
+   unless ($match)
+   {
+      if (!$struct && $lat && $lon)
+      {
+         $struct = $_;
+         if ($struct =~ /[^\.]/)
+         {
+            print "STRUCT cont'd ";
+            $stcont = 1;
+         }
+         else { undef $stcont; }
+         print "STRUCT: ";
+      }
+   }
+
+#   print "$_\n";
+   print "\n";
 
    unshift(@lbuf, $_);
    pop(@lbuf);
