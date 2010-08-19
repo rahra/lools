@@ -53,6 +53,9 @@ while (<>)
       if ($hml == $lcnt - 1) { $hm = ""; }
       if ($hfl == $lcnt - 1) { $hf = ""; }
       if (($hm eq "") && ($range eq "") && ($hf ne "")) { $range = $hf; $hf = ""; }
+      # Correct if number of light was accidently detected
+      # as structure.
+      if ($struct =~ /^( [A-Z] )?[0-9]+(\.[0-9]+)?[\.]?$/) { print "UNDEF \"$struct\"\n"; undef $struct; }
 
       # output
       print "LIGHT:\t";
@@ -60,6 +63,9 @@ while (<>)
       unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tNAME\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
       else { print "$intnr\t$uslnr\t$osection\t$name\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$whistle\t$racon\t$sw\t$struct\n"; }
 
+      # New sections are detected directly before end of light
+      # is detected, hence, previous light belongs to previous (old) section.
+      # This is what happens here.
       if ($section ne $osection) { $osection = $section; }
 
       # clear variables to reduce risk of detection errors.
@@ -83,6 +89,8 @@ while (<>)
       undef $racon;
       undef $sw;
       undef $struct;
+      undef $stcont;
+      undef $structend;
       $icnt = 0;
 
       $intnr = $_;
@@ -181,6 +189,7 @@ while (<>)
          $struct = "$struct $1";
          undef $stcont;
          $match = 1;
+         $structend = 1;
          print "STRUCT END: ";
       }
    }
@@ -304,7 +313,7 @@ while (<>)
       if (!$su && $whloop)
       { 
          print "NOT_SECTOR: \"\"$_\"\""; 
-         if (/([^\.]+[\.])/)
+         if (/([^\.]+[\.])/ && !$structend)
          {
             $struct = $1;
             print "STRUCT: ";
