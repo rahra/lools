@@ -35,11 +35,18 @@ while (<>)
 #      print "AREA: ";
 #   }
 
-   if (/(.*):$/)
+   if (/^([\-]*)(.*):$/)
    {
       print "SECTION: ";
       $osection = $section;
-      $section = $1;
+      if ($1)
+      {
+         $section = "$section$1$2";
+      }
+      else
+      {
+         $section = $2;
+      }
       undef $su;
       $match = 1;
    }
@@ -56,12 +63,13 @@ while (<>)
       # Correct if number of light was accidently detected
       # as structure.
       if ($struct =~ /^( [A-Z] )?[0-9]+(\.[0-9]+)?[\.]?$/) { print "UNDEF \"$struct\"\n"; undef $struct; }
+      if ($siren) { $siren = $horn; undef $horn; }
 
       # output
       print "LIGHT:\t";
       # Is it the first line?
-      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tNAME\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
-      else { print "$intnr\t$uslnr\t$osection\t$name\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$whistle\t$racon\t$sw\t$struct\n"; }
+      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tNAME\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tSIREN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
+      else { print "$intnr\t$uslnr\t$osection\t$name\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$siren\t$whistle\t$racon\t$sw\t$struct\n"; }
 
       # New sections are detected directly before end of light
       # is detected, hence, previous light belongs to previous (old) section.
@@ -91,6 +99,7 @@ while (<>)
       undef $struct;
       undef $stcont;
       undef $structend;
+      undef $siren;
       $icnt = 0;
 
       $intnr = $_;
@@ -230,14 +239,17 @@ while (<>)
    }
 
    # Is there a "Horn"?
-   if (/.*?Horn: (.*)/)
+   if (/.*?(Horn|Siren): (.*)/)
    {
-      $horn = $1;
+      if ($1 eq "Siren") { $siren = 1; }
+      $horn = $2;
       $match = 1;
-      print "HORN: ($1) ";
+      $rxc = "$1: $2";
+      print "HORN: ($2) ";
       if ($horn =~ /(\([^\)]*$)/) { $hu = 1; }
       else { $hu = 0; }
       print "($hu) ($1) ";
+      s/\Q$rxc\E//;
    }
 
    # Is there a "Whistle"?
