@@ -41,11 +41,12 @@ while (<>)
       $osection = $section;
       if ($1)
       {
-         $section = "$section$1$2";
+         $section = "$topsection$1$2";
       }
       else
       {
          $section = $2;
+         $topsection = $section;
       }
       undef $su;
       $match = 1;
@@ -65,16 +66,37 @@ while (<>)
       if ($struct =~ /^( [A-Z] )?[0-9]+(\.[0-9]+)?[\.]?$/) { print "UNDEF \"$struct\"\n"; undef $struct; }
       if ($siren) { $siren = $horn; undef $horn; }
 
+      # Remove leading or trailing spaces from name.
+      $name =~ s/(?:^ +)||(?: +$)//g;
+      if ($name =~ /^([\-]+)/)
+      {
+         $n = length($1);
+         $namea[$n] = $name;
+         for ($i = $n + 1; $i < 5; $i++)
+         {
+            undef $namea[$i];
+         }
+      }
+      else
+      {
+         undef @namea;
+         $namea[0] = $name;
+      }
+
       # output
       print "LIGHT:\t";
       # Is it the first line?
-      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tNAME\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tSIREN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
-      else { print "$intnr\t$uslnr\t$osection\t$name\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$siren\t$whistle\t$racon\t$sw\t$struct\n"; }
+      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tSECTION_COMB\tNAME\tNAME_COMB\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tSIREN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
+      else { print "$intnr\t$uslnr\t$osection\t$osectiona[0]$osectiona[1]\t$name\t$namea[0]$namea[1]$namea[2]$namea[3]$namea[4]\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$siren\t$whistle\t$racon\t$sw\t$struct\n"; }
 
       # New sections are detected directly before end of light
       # is detected, hence, previous light belongs to previous (old) section.
       # This is what happens here.
-      if ($section ne $osection) { $osection = $section; }
+      if ($section ne $osection)
+      { 
+         $osection = $section;
+         undef @namea; 
+      }
 
       # clear variables to reduce risk of detection errors.
       $name = "";
