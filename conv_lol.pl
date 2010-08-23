@@ -37,6 +37,7 @@ while (<>)
 
    if (/^([\-]*)(.*):$/)
    {
+      $lasts = 1;
       print "SECTION: ";
       $osection = $section;
       if ($1)
@@ -50,13 +51,19 @@ while (<>)
       }
       undef $su;
       $match = 1;
+      next;
    }
 
    # This detects the international light number.
    # Once it is found, all previous data is displayed
    # and cleared.
-   if (/^[A-Z] [0-9]{4,4}(.[0-9]{1,2})?$/)
+   if (/^([A-Z]) ([0-9]{4,4})(\.([0-9]{1,2}))?$/)
    {
+      @oiintnr = @iintnr;
+      $iintnr[0] = $1;
+      $iintnr[1] = $2;
+      $iintnr[2] = $4;
+
       # correct erroneous height detection
       if ($hml == $lcnt - 1) { $hm = ""; }
       if ($hfl == $lcnt - 1) { $hf = ""; }
@@ -86,15 +93,17 @@ while (<>)
       # output
       print "LIGHT:\t";
       # Is it the first line?
-      unless ($intnr) { print "INTNR\tUSLNR\tSECTION\tSECTION_COMB\tNAME\tNAME_COMB\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tSIREN\tWHISTLE\tRACON\tSAFE_WATER\tSTRUCTURE\n"; }
-      else { print "$intnr\t$uslnr\t$osection\t$osectiona[0]$osectiona[1]\t$name\t$namea[0]$namea[1]$namea[2]$namea[3]$namea[4]\t$lat\t$lon\t$latd\t$lond\t$char\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$siren\t$whistle\t$racon\t$sw\t$struct\n"; }
+      unless ($intnr) { print "INTNR\tIINTNR_1\tIINTNR_2\tIINTNR_3\tUSLNR\tSECTION\tNAME\tNAME_COMB\tLAT\tLON\tLAT_D\tLON_D\tCHARACTER\tMULT_LIGHT\tCHAR_ONLY\tGROUP\tPOS\tCOLOUR\tPERIOD\tSEQUENCE\tSECTOR\tHEIGHT [ft}\tHEIGHT [m]\tRANGE [nm]\tHORN\tSIREN\tWHISTLE\tRACON\tSAFE_WATER\tRADAR_REFLECTOR\tTOPMARK\tAV_LIGHT\tSTRUCTURE\n"; }
+      else { print "$intnr\t$oiintnr[0]\t$oiintnr[1]\t$oiintnr[2]\t$uslnr\t$xsection\t$name\t$namea[0]$namea[1]$namea[2]$namea[3]$namea[4]\t$lat\t$lon\t$latd\t$lond\t$char\t$mult_light\t$charo\t$rgroup\t$pos\t$chcol\t$per\t$group\t$sector\t$hf\t$hm\t$range\t$horn\t$siren\t$whistle\t$racon\t$sw\t$rref\t$topmark\t$avia\t$struct\n"; }
 
       # New sections are detected directly before end of light
       # is detected, hence, previous light belongs to previous (old) section.
       # This is what happens here.
-      if ($section ne $osection)
+      if ($lasts)
+      #if ($section ne $osection)
       { 
-         $osection = $section;
+         $xsection = $section;
+         undef $lasts;
          undef @namea; 
       }
 
@@ -123,6 +132,12 @@ while (<>)
       undef $structend;
       undef $siren;
       $icnt = 0;
+      undef $rgroup;
+      undef $chcol;
+      undef $charo;
+      undef $rref;
+      undef $topmark;
+      undef $avia;
 
       $intnr = $_;
       $uslnr = $lbuf[0];
@@ -167,6 +182,7 @@ while (<>)
       unless ($char)
       {
          $char = $1;
+         $mult_light = $3;
          $icnt = 3;
          print "CHAR: ($8) ";
          $match = 1;
@@ -174,6 +190,19 @@ while (<>)
          { 
             $hf = $1; 
             print "\nHEIGHT [ft]: ";
+         }
+         if ($char =~ /\(([^\)]+)\)/)
+         { 
+            if (($1 eq "vert.") || ($1 eq "horiz.")) { $pos = $1; }
+            else { $rgroup = $1; }
+         }
+         else { $rgroup = "1"; }
+
+         if ($char =~ /(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\./) { $charo = "$1."; }
+
+         while ($char =~ /(W|R|G|Y|Bu|Or|Vi)\./g)
+         {
+            $chcol = "$chcol$1.";
          }
       }
    }
@@ -281,6 +310,12 @@ while (<>)
       $match = 1;
       print "WHISTLE: ";
    }
+
+   if (/Radar reflector/) { $rref = "yes"; }
+
+   if (/topmark/) { print "TOPMARK: "; $topmark = "yes"; }
+
+   if (/AVIATION/) { print "AVIATION: "; $avia = "yes"; }
 
    if (/period ([0-9]+)s/)
    {
