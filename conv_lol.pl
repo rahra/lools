@@ -72,6 +72,9 @@ while (<>)
       # as structure.
       if ($struct =~ /^( [A-Z] )?[0-9]+(\.[0-9]+)?[\.]?$/) { print "UNDEF \"$struct\"\n"; undef $struct; }
       if ($siren) { $siren = $horn; undef $horn; }
+      # some lights don't have coords
+      unless ($lat) { $lat = "0° 00.0´ N"; $latd = 0.0; }
+      unless ($lon) { $lon = "0° 00.0´ E"; $lond = 0.0; }
 
       # Remove leading or trailing spaces from name.
       $name =~ s/(?:^ +)||(?: +$)//g;
