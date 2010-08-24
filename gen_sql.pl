@@ -41,13 +41,28 @@ while (<>)
       if ($3) { $start = $3; }
       else { $start = $end; }
       $end = $5;
-      print "   INSERT INTO sectors VALUES ('$vals[2]','$vals[3]','$vals[4]',NULL,$start,$end,'$col');\n";
+      print "   INSERT INTO sectors VALUES ('$vals[2]','$vals[3]','$vals[4]',NULL,$start,$end,'$col',NULL);\n";
       $loop = 1;
    }
 
    while (!$loop && ($vals[18] =~ /(W|R|G|Y|Bu|Or|Vi)\./g))
    {
-      print "   INSERT INTO sectors VALUES ('$vals[2]','$vals[3]','$vals[4]',NULL,NULL,NULL,'$1');\n";
+      print "   INSERT INTO sectors VALUES ('$vals[2]','$vals[3]','$vals[4]',NULL,NULL,NULL,'$1',NULL);\n";
+   }
+
+   if ($vals[24] =~ /^[0-9]+$/)
+   {
+      if ($vals[24]) 
+      {
+         print "   UPDATE sectors SET sectors.range=$vals[24] WHERE int_chr='$vals[2]' AND int_nr='$vals[3]' AND int_subnr='$vals[4]';\n";
+      }
+   }
+   else
+   {
+      while ($vals[24] =~ /(W|R|G|Y|Bu|Or|Vi)\. ([0-9]+)/g)
+      {
+         print "   UPDATE sectors SET sectors.range=$2 WHERE int_chr='$vals[2]' AND int_nr='$vals[3]' AND int_subnr='$vals[4]' AND colour='$1';\n";
+      }
    }
 }
 
