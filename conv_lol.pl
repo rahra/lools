@@ -133,6 +133,7 @@ while (<>)
       undef $siren;
       $icnt = 0;
       undef $rgroup;
+      undef $pos;
       undef $chcol;
       undef $charo;
       undef $rref;
