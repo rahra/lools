@@ -22,17 +22,18 @@ my $next_line = 0;
 
 my @section = ();
 my %light = ();
+my %prev_light = ();
 
 
 sub output_light
 {
    if (!$lightno)
    {
-      print "SECTION\tINTNR\tUSLNR\tNAME\tCHARACTER\tMULT_POS\tSTRUCT\n";
+      print "SECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tFRONT\tLAT\tLON\tCHARACTER\tMULT_POS\tSTRUCT\n";
       return;
    }
-   for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { print "$light{'section'}[$i]"; }
-   print "\t$light{'intnr'}\t$light{'uslnr'}\t$light{'lat'}\t$light{'lon'}\t$light{'char'}\t$light{'mpos'}\t$light{'struct'}\n";
+   for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { print "$section[$i]"; }
+   print "\t$light{'intnr'}\t$light{'uslnr'}\t$light{'cat'}\t$light{'name'}\t$light{'front'}\t$light{'lat'}\t$light{'lon'}\t$light{'char'}\t$light{'mpos'}\t$light{'struct'}\n";
 }
 
 
@@ -40,8 +41,7 @@ while (<STDIN>)
 {
    chomp;
    $lineno++;
-#print "{ $_ }\n";
-#print "$next_line, $lineno, $intfound, $heightmfound, $namebreak, $structbreak\n";
+
    if ($next_line)
    {
       switch ($next_line)
@@ -120,11 +120,7 @@ while (<STDIN>)
       else
       {
          # output light
-         #foreach my $elem (values %light) { print "\"$elem\","; }
-         #while ((my $k, my $v) = each(%light)) { print "$k => \"$v\","; }
-         #print "\n";
-         output_light(%light);
-
+         output_light;
 
          # reset variables after output
          $lightno++;
@@ -134,12 +130,16 @@ while (<STDIN>)
          $next_line = 0;
          $heightmfound = 0;
 
+         %prev_light = %light;
          %light = ();
 
          # check if name is line-breaked
          if (!$12 && $11) { $namebreak = 1; }
          $light{'uslnr'} = $1;
+         $light{'cat'} = $6;
          $light{'name'} = $4;
+         $light{'name'} =~ s/<[\/]?[bi]>//g;
+         if ($light{'name'} =~ /^[\- ]*Rear/) { $light{'front'} = $prev_light{'intnr'}; }
 
          $next_line = NL_LAT;
          next;
@@ -155,8 +155,8 @@ while (<STDIN>)
 
    if (/(([\-]*)?[^:]*):<br>$/)
    {
-      $light{'section'}[length $2] = $1;
-      for (my $i = length $2 + 1; $i < MAX_SEC_DEPTH; $i++) { undef $light{'section'}[$i]; }
+      $section[length $2] = $1;
+      for (my $i = 1 + length $2; $i < MAX_SEC_DEPTH; $i++) { undef $section[$i]; }
       next;
    }
 
@@ -168,7 +168,7 @@ while (<STDIN>)
    }
 
    if (/<b>([0-9]+) <\/b>([^<]*(\.)?)<br>/)
-   {print "STR\n";
+   {
       $light{'range'} = $1;
       $light{'struct'} = $2;
       unless ($3) { $structbreak = 1; }
@@ -179,6 +179,14 @@ while (<STDIN>)
    {
       $light{'height_m'} = $1;
       $heightmfound = 1;
+      next;
+   }
+
+   if (/^(([0-9]{1,3})° ([0-9]{2,2}\.[0-9])´ ([EW]))<br>/)
+   {
+      $light{'lon'} = $1;
+      $light{'lond'} = $2 + $3 / 60.0;
+      if ($4 eq "W") { $light{'lond'} = -$light{'lond'}; }
       next;
    }
 }
