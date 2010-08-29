@@ -11,6 +11,7 @@ use constant NL_RNG => 3;
 
 
 my $lineno = 0;
+my $lightno = 0;
 my $namebreak = 0;
 my $intfound = 0;
 my $heightmfound = 0;
@@ -21,6 +22,18 @@ my $next_line = 0;
 
 my @section = ();
 my %light = ();
+
+
+sub output_light
+{
+   if (!$lightno)
+   {
+      print "SECTION\tINTNR\tUSLNR\tNAME\tCHARACTER\tMULT_POS\tSTRUCT\n";
+      return;
+   }
+   for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { print "$light{'section'}[$i]"; }
+   print "\t$light{'intnr'}\t$light{'uslnr'}\t$light{'lat'}\t$light{'lon'}\t$light{'char'}\t$light{'mpos'}\t$light{'struct'}\n";
+}
 
 
 while (<STDIN>)
@@ -108,11 +121,13 @@ while (<STDIN>)
       {
          # output light
          #foreach my $elem (values %light) { print "\"$elem\","; }
-         while ((my $k, my $v) = each(%light)) { print "$k => \"$v\","; }
-         print "\n";
+         #while ((my $k, my $v) = each(%light)) { print "$k => \"$v\","; }
+         #print "\n";
+         output_light(%light);
 
 
          # reset variables after output
+         $lightno++;
          $intfound = 0;
          $namebreak = 0;
          $structbreak = 0;
@@ -140,8 +155,8 @@ while (<STDIN>)
 
    if (/(([\-]*)?[^:]*):<br>$/)
    {
-      $section[length($2)] = $1;
-      for (my $i = length($2) + 1; $i < MAX_SEC_DEPTH; $i++) { undef $section[$i]; }
+      $light{'section'}[length $2] = $1;
+      for (my $i = length $2 + 1; $i < MAX_SEC_DEPTH; $i++) { undef $light{'section'}[$i]; }
       next;
    }
 
