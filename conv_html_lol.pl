@@ -13,6 +13,7 @@ use constant DPRINT => 1;
 my $NBSP = '&nbsp;';
 
 my $lineno = 0;
+my $lightcnt = 0;
 my $lightno = 0;
 my $namebreak = 0;
 my $structbreak = 0;
@@ -43,11 +44,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tFRONT\tLAT\tLON\tCHARACTER\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tRACON\tALT_LIGHT\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tFRONT\tLAT\tLON\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tRACON\tALT_LIGHT\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'char'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'racon'}\t$l->{'altlight'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'racon'}\t$l->{'altlight'}\n";
 }
 
 
@@ -63,7 +64,8 @@ while (<STDIN>)
    $lineno++;
    $fbuf[$lineno] = $_;
 
-   dprint "." unless $lineno % 10;
+   # progress output
+   dprint "." unless $lineno % 100;
 
    if ($next_line)
    {
@@ -148,7 +150,10 @@ while (<STDIN>)
       }
       else
       {
+         # progress output
          dprint "+";
+
+         $lightcnt++;
          $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
          for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $section[$i]; }
          # output light
@@ -210,7 +215,7 @@ sub cap_test
    return 0;
 }
 
-
+dprint "\n$lightcnt lights detected.\n";
 dprint "\nPASS 2: ";
 
 for my $lgt (@lbuf)
@@ -470,7 +475,7 @@ for my $lgt (@lbuf)
 
    } # for ()
 
-   print "LIGHT:\t";
+#   print "LIGHT:\t";
    output_light $lgt;
 }
 
@@ -487,13 +492,14 @@ for my $lgt (@lbuf)
    {
       next unless $fbuf[$i];
       print "$i: $fbuf[$i]\n";
+
+      $lgt->{'rem'} .= $fbuf[$i];
    }
+
+   if ($lgt->{'char'} =~ /^([0-9]) /) { $lgt->{'multi'} = $1; }
+
+   print "LIGHT:\t";
+   output_light $lgt;
+
 }
-
-
-#for (@fbuf)
-#{
-#   print;
-#   print "\n";
-#}
 
