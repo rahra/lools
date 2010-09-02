@@ -52,11 +52,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\n";
 }
 
 
