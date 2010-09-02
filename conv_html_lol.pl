@@ -24,6 +24,7 @@ my $prev_line = 0;
 my $colors = "W|R|G|Y|Bu|Or|Vi";
 
 my @section = ();
+my @prev_section = ();
 my %light = ();
 my %prev_light = ();
 
@@ -31,6 +32,13 @@ my %prev_light = ();
 my @fbuf = ();
 # buffer containing lights
 my @lbuf = ();
+
+
+sub pprogress
+{
+   $| = 1;
+   print shift;
+}
 
 
 sub dprint
@@ -44,11 +52,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tFRONT\tLAT\tLON\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tRACON\tALT_LIGHT\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'racon'}\t$l->{'altlight'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\n";
 }
 
 
@@ -65,7 +73,9 @@ while (<STDIN>)
    $fbuf[$lineno] = $_;
 
    # progress output
-   dprint "." unless $lineno % 100;
+   pprogress "." unless $lineno % 100;
+
+   print "$lineno: ($next_line,$prev_line,$structbreak) $_\n";
 
    if ($next_line)
    {
@@ -142,8 +152,9 @@ while (<STDIN>)
       next;
    }
 
-   if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?([^<]*?)(\.)?)<br>$/)
+   if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
    {
+      print "MATCH ";
       if ($7 && ($light{'uslnr'} > $1))
       {
 #         print "ILL ($6): $_\n";
@@ -151,11 +162,12 @@ while (<STDIN>)
       else
       {
          # progress output
-         dprint "+";
+         pprogress "+";
 
          $lightcnt++;
          $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
-         for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $section[$i]; }
+         for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $prev_section[$i]; }
+         @prev_section = @section;
          # output light
          #output_light \%light;
          push @lbuf, {%light};
@@ -176,13 +188,14 @@ while (<STDIN>)
          $light{'cat'} = $6;
          $light{'name'} = $4;
          $light{'name'} =~ s/<[\/]?[bi]>//g;
-         if ($light{'name'} =~ /^[\- ]*Rear/) { $light{'front'} = $prev_light{'intnr'}; }
+         #if ($light{'name'} =~ /^[\- ]*Rear/) { $light{'front'} = $prev_light{'intnr'}; }
+         if ($light{'name'} =~ /Rear/) { $light{'front'} = $prev_light{'intnr'}; }
          $next_line = 'NL_NAT';
          next;
       }
    }
 
-   if (!$light{'intnr'} && /^<i>([A-Z] [0-9]{4}(\.[0-9]+)?)<\/i>/)
+   if (!$light{'intnr'} && /^<i>([A-Z] ($NBSP)?[0-9]{4}(\.[0-9]+)?)<\/i>/)
    {
       $light{'intnr'} = $1;
       $next_line = 'NL_NAME' if $namebreak;
@@ -496,7 +509,31 @@ for my $lgt (@lbuf)
       $lgt->{'rem'} .= $fbuf[$i];
    }
 
+   # check if light character contains muliplicity
    if ($lgt->{'char'} =~ /^([0-9]) /) { $lgt->{'multi'} = $1; }
+
+   # look for incomplete names
+   unless ($lgt->{'name'} =~ /\.$/) { $lgt->{'n_inc'} = 1; }
+
+   # remove "<br>" from remarks
+   $lgt->{'rem'} =~ s/<br>//g;
+   $lgt->{'racon'} =~ s/<br>//g;
+
+   # try to detect sectors
+   my $sec = $lgt->{'rem'};
+#   while ($sec =~ /((($colors)\.|[A-Za-z]+)?($NBSP| )?(([0-9]{3}°([0-9]{2}′)?)|[A-Za-z\.]*)?-([0-9]{3}°([0-9]{2}′)?))/g)
+#   {
+#      print "SECTOR: $1\n";
+#      $lgt->{'sector'} .= ',' if $lgt->{'sector'};
+#      $lgt->{'sector'} .= $1;
+#   }
+   $sec =~ s/$NBSP| //g;
+   my $deg_pat = "([0-9]{3}°([0-9]{2}′)?)|shore|obsc\.";
+   while ($sec =~ /((Visible|Intensified|Obscured|($colors)\.)(from|\(unint\.\)|\(int.\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
+   {
+      $lgt->{'sector'} .= ',' if $lgt->{'sector'};
+      $lgt->{'sector'} .= $1;
+   }
 
    print "LIGHT:\t";
    output_light $lgt;
