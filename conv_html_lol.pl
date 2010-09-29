@@ -22,6 +22,7 @@ my $next_line = 0;
 my $prev_line = 0;
 
 my $colors = "W|R|G|Y|Bu|Or|Vi";
+my %direction = ('N' => 'north', 'E' => 'east', 'S' => 'south', 'W' => 'west');
 
 my @section = ();
 my @prev_section = ();
@@ -52,11 +53,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\n";
 }
 
 
@@ -289,10 +290,28 @@ for my $lgt (@lbuf)
          {
             switch ($next_line)
             {
+               case 'NL_RNGPRT_STRUCT'
+               {
+                  $next_line = 0;
+                  $fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br>/;
+                  $lgt->{'range'} .= $1;
+                  $lgt->{'struct'} .= $2;
+                  if ($3) { $structbreak = 0; }
+                  else { $structbreak = 1; }
+                  $prev_line = 'PL_RNGPRT_STRUCT';
+               }
                case 'NL_STRUCT'
                {
+                  $next_line = 0;
                   # this line might be a color range
-                  if ($fbuf[$i] =~ /^($colors)\.($NBSP| )(<b>)?([0-9]+)(<\/b>)?<br>/)
+                  if ($fbuf[$i] =~ /^(($colors)\.)<br>/)
+                  {
+                     $lgt->{'range'} .= ',' if $lgt->{'range'};
+                     $lgt->{'range'} .= $1;
+                     $prev_line = 'PL_RANGE_PART';
+                     $next_line = 'NL_RNGPRT_STRUCT';
+                  }
+                  elsif ($fbuf[$i] =~ /^($colors)\.($NBSP| )(<b>)?([0-9]+)(<\/b>)?<br>/)
                   {
                      $lgt->{'range'} .= "," if $lgt->{'range'};
                      $lgt->{'range'} .= "$1. $4";
@@ -308,6 +327,7 @@ for my $lgt (@lbuf)
                }
                case 'NL_CRNG'
                {
+                  $next_line = 0;
                   if ($fbuf[$i] =~ /^([0-9]+)<br>/)
                   {
                      $lgt->{'range'} .= $1;
@@ -324,7 +344,6 @@ for my $lgt (@lbuf)
                }
             }
             $fbuf[$i] = "";
-            $next_line = 0;
             next;
          }
 
@@ -337,10 +356,12 @@ for my $lgt (@lbuf)
                $prev_line = 'PL_HEIGHT_FT';
                next;
             }
-            else
-            {
-               $lgt->{'height_ft'} = "N/A";
-            }
+# I commented this out again. Unfortunately I cannot remember
+# what exactly the reason for this was.
+#            else
+#            {
+#               $lgt->{'height_ft'} = "N/A";
+#            }
          }
 
          if ($fbuf[$i] =~ /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))<br>/)
@@ -378,8 +399,17 @@ for my $lgt (@lbuf)
 
          if ($fbuf[$i] =~ /^(($colors)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?([^<]*?(\.)?)<br>/)
          {
-            $lgt->{'range'} = $1 . $4;
-            $lgt->{'struct'} = $6;
+            #$lgt->{'range'} .= ',' if $lgt->{'range'};
+            if ($lgt->{'range'})
+            {
+               unless (substr($lgt->{'range'}, length $lgt->{'range'} - 1, 1) eq ".")
+               {
+                  $lgt->{'range'} .= ',';
+               }
+            }
+            $lgt->{'range'} .= $1 . $4;
+            $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+            $lgt->{'struct'} .= $6;
             $structbreak = 1 unless $7;
             $prev_line = 'PL_STRUCT';
 
@@ -521,19 +551,26 @@ for my $lgt (@lbuf)
 
    # try to detect sectors
    my $sec = $lgt->{'rem'};
-#   while ($sec =~ /((($colors)\.|[A-Za-z]+)?($NBSP| )?(([0-9]{3}°([0-9]{2}′)?)|[A-Za-z\.]*)?-([0-9]{3}°([0-9]{2}′)?))/g)
-#   {
-#      print "SECTOR: $1\n";
-#      $lgt->{'sector'} .= ',' if $lgt->{'sector'};
-#      $lgt->{'sector'} .= $1;
-#   }
    $sec =~ s/$NBSP| //g;
+
    my $deg_pat = "([0-9]{3}°([0-9]{2}′)?)|shore|obsc\.";
    while ($sec =~ /((Visible|Intensified|Obscured|($colors)\.)(from|\(unint\.\)|\(int.\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
    {
       $lgt->{'sector'} .= ',' if $lgt->{'sector'};
       $lgt->{'sector'} .= $1;
    }
+
+   my $str = $lgt->{'struct'};
+   $str =~ s/$NBSP| //g;
+   if ($str =~ /([nesw])\.cardinal/i)
+   {
+      print "cardinal: $1\n";
+      $lgt->{'type'} = 'cardinal:' . $direction{"$1"};
+   }
+   elsif ($str =~ /isolated/i) { $lgt->{'type'} = 'isolated_danger';}
+   elsif ($str =~ /safewater/i) { $lgt->{'type'} = 'safe_water'; }
+
+   if ($str =~ /topmark/i) { $lgt->{'topmark'} = 'yes'; }
 
    print "LIGHT:\t";
    output_light $lgt;
