@@ -53,11 +53,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'error'}\n";
 }
 
 
@@ -543,7 +543,12 @@ for my $lgt (@lbuf)
    if ($lgt->{'char'} =~ /^([0-9]) /) { $lgt->{'multi'} = $1; }
 
    # look for incomplete names
-   unless ($lgt->{'name'} =~ /\.$/) { $lgt->{'n_inc'} = 1; }
+   unless ($lgt->{'name'} =~ /\.$/)
+   { 
+      #$lgt->{'n_inc'} = 1; 
+      $lgt->{'error'} .= ',' if $lgt->{'error'};
+      $lgt->{'error'} .= 'name_incomplete';
+   }
 
    # remove "<br>" from remarks
    $lgt->{'rem'} =~ s/<br>//g;
@@ -571,6 +576,45 @@ for my $lgt (@lbuf)
    elsif ($str =~ /safewater/i) { $lgt->{'type'} = 'safe_water'; }
 
    if ($str =~ /topmark/i) { $lgt->{'topmark'} = 'yes'; }
+
+   # FIXME: not sure if the following is true.
+   if ($lgt->{'cat'} eq 'i')
+   {
+      $lgt->{'typea'} = 'buoy';
+   }
+   elsif ($lgt->{'cat'} eq 'b')
+   {
+      $lgt->{'typea'} = 'major';
+   }
+   else
+   {
+      $lgt->{'typea'} = 'beacon' if $lgt->{'type'};
+   }
+
+   if ($lgt->{'struct'} =~ /;($NBSP| )([0-9]+)\./)
+   {
+      $lgt->{'strcthgt_ft'} = $2;
+   }
+
+   if ($lgt->{'height_m'} && $lgt->{'height_ft'})
+   {
+      if (($lgt->{'height_ft'} / $lgt->{'height_m'} < 3.0) || ($lgt->{'height_ft'} / $lgt->{'height_m'} > 3.6))
+      {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'height';
+      }
+   }
+   elsif ($lgt->{'height_m'} || $lgt->{'height_ft'})
+   {
+      $lgt->{'error'} .= ',' if $lgt->{'error'};
+      $lgt->{'error'} .= 'height';
+   }
+
+   if (($lgt->{'latd'} == 0.0) && ($lgt->{'lond'} == 0.0))
+   {
+      $lgt->{'error'} .= ',' if $lgt->{'error'};
+      $lgt->{'error'} .= 'position';
+   }
 
    print "LIGHT:\t";
    output_light $lgt;
