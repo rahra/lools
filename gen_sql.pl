@@ -13,8 +13,10 @@ my $uslsubnr;
 my $intsubnr;
 my $char;
 my $group;
-my $topm;
+#my $topm;
  
+print "TRUNCATE lights;\nTRUNCATE sectors;\n\n";
+
 # the first line of the csv file must be a header line
 $_ = <STDIN>;
 chomp;
@@ -57,7 +59,7 @@ while (<STDIN>)
    }
 
    # set some missing default values if missing
-   $val{'multiplicity'} = 1 unless $val{'multiplicity'};
+   $val{'multiplcty'} = 1 unless $val{'multiplcty'};
    $val{'period'} = 0 unless $val{'period'};
    $val{'height_m'} = 0 unless $val{'height_m'};
    $val{'height_ft'} = 0 unless $val{'height_ft'};
@@ -65,14 +67,17 @@ while (<STDIN>)
    $val{'latd'} = 0.0 unless $val{'latd'};
    $val{'lond'} = 0.0 unless $val{'lond'};
 
+   $val{'mult_pos'} =~ /\((horiz|vert)\.\)/;
+   my $mpos = $1;
+
    $val{'character'} =~ /^([0-9] ?)?(Dir\.)?(F|L.Fl|Al.Fl|Fl|Iso|Oc|V.Q|U.Q|Q|Mo)\.(\((.*?)\))?/;
    $char = $3;
    $group = $5;
    $group = 1 unless $5;
 
-   $topm = $val{'topmark'} ? 1 : 0;
+   #$topm = $val{'topmark'} ? 1 : 0;
 
-   print "$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','',$val{'period'},$val{'multiplicity'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,0,$topm,0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}'";
+   print "$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,0,'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}'";
 
    print ");\n";
 
