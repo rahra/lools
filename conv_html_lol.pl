@@ -25,6 +25,9 @@
 # Don't forget to create the tables before. The definition is found in
 # "list_of_lights.sql".
 # 
+# (7) Generate OSM file out of database:
+# `./gen_osm.pl > Pub113bk.osm`
+#
 
 use strict;
 use Switch;
@@ -48,6 +51,17 @@ my $prev_line = 0;
 
 my $colors = "W|R|G|Y|Bu|Or|Vi";
 my %direction = ('N' => 'north', 'E' => 'east', 'S' => 'south', 'W' => 'west');
+my %topmark = (
+   'cardinal:north' => '2cones_pointup',
+   'cardinal:east' => '2cones_base2base',
+   'cardinal:south' => '2cones_pointdown', 
+   'cardinal:west' => '2cones_point2point',
+   'safe_water' => 'sphere',
+   'isolated_danger' => '2spheres',
+   'special_purpose' => 'xshape',
+   'lateral:port' => 'cube',
+   'lateral:starboard' => 'cone_pointup'
+);
 
 my @section = ();
 my @prev_section = ();
@@ -78,11 +92,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tERROR\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'error'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'error'}\n";
 }
 
 
@@ -365,6 +379,7 @@ for my $lgt (@lbuf)
                   elsif ($fbuf[$i] =~ /^([0-9]+)($NBSP| )(.*?(\.)?)<br>/)
                   {
                      $lgt->{'range'} .= $1;
+                     $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
                      $lgt->{'struct'} .= $3;
                      if ($4) { $structbreak = 0; }
                      else { $structbreak = 1; }
@@ -444,6 +459,7 @@ for my $lgt (@lbuf)
 
             if ($lgt->{'struct'} =~ /^(.*?[^A-Z]\.)(.*)$/)
             {
+               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
                $lgt->{'struct'} = $1;
                $lgt->{'rem'} = $2;
             }
@@ -454,6 +470,7 @@ for my $lgt (@lbuf)
             }
             elsif ($lgt->{'struct'} =~ /^(.*?(\.)?)$NBSP$NBSP(.+)$/)
             {
+               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
                $lgt->{'struct'} = $1;
                $lgt->{'rem'} = $3;
                $structbreak = 1 unless $2;
@@ -503,6 +520,7 @@ for my $lgt (@lbuf)
          {
             if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br>/)
             {
+               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
                $lgt->{'struct'} = $1;
                $structbreak = 1 unless $2;
                $fbuf[$i] = "";
@@ -611,6 +629,7 @@ for my $lgt (@lbuf)
    }
    elsif ($str =~ /isolated/i) { $lgt->{'type'} = 'isolated_danger';}
    elsif ($str =~ /safewater/i) { $lgt->{'type'} = 'safe_water'; }
+   elsif ($str =~ /special/i) { $lgt->{'type'} = 'special_purpose'; }
 
    if ($str =~ /topmark/i) { $lgt->{'topmark'} = 'yes'; }
 
@@ -623,9 +642,55 @@ for my $lgt (@lbuf)
    {
       $lgt->{'typea'} = 'major';
    }
-   else
+
+   if ($lgt->{'struct'} =~ /\bbeacon\b/)
    {
-      $lgt->{'typea'} = 'beacon' if $lgt->{'type'};
+      $lgt->{'typea'} = 'beacon';
+   }
+
+#   else
+#   {
+#      $lgt->{'typea'} = 'beacon' if $lgt->{'type'};
+#   }
+
+   if ($lgt->{'struct'} =~ /\(([AB])\)/)
+   {
+      $lgt->{'bsystem'} = $1;
+      my $str = $lgt->{'struct'};
+      $str =~ s/$NBSP| //g;
+      if ($str =~ /\b(STARBOARD|PORT|GRG|RGR)\b/)
+      {
+         my $side = $1;
+         $side = 'PREFERRED_CHANNEL_STARBOARD' if $side eq 'GRG';
+         $side = 'PREFERRED_CHANNEL_PORT' if $side eq 'RGR';
+
+         unless ($lgt->{'type'})
+         {
+            $lgt->{'type'} = 'lateral:' . lc $side;
+         }
+         else
+         {
+            $lgt->{'error'} .= ',' if $lgt->{'error'};
+            $lgt->{'error'} .= 'e_lateral';
+         }
+      }
+      else
+      {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'lateral_unknown';
+      }
+   }
+
+   if ($lgt->{'type'} && !$lgt->{'typea'})
+   {
+      $lgt->{'typea'} = 'beacon';
+      $lgt->{'error'} .= ',' if $lgt->{'error'};
+      $lgt->{'error'} .= 'beacon_guess';
+   }
+
+   if (defined $topmark{$lgt->{'type'}} && ($lgt->{'topmark'} eq 'yes'))
+   {
+      $lgt->{'topmark'} = $topmark{$lgt->{'type'}};
    }
 
    if ($lgt->{'struct'} =~ /;($NBSP| )([0-9]+)\./)
