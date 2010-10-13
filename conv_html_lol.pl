@@ -1,5 +1,30 @@
 #!/usr/bin/perl
-
+#
+# @author Bernhard R. Fischer
+#
+# (1) Convert the original PDF document to an HTML by using pdftohtml:
+# `pdftohtml -f 33 -l 470 -noframes Pub113bk.pdf`
+# -f and -l denote the first a last page of the document.
+#
+# (2) Linebreak properly by running
+# `perl -pe 's/<br>(.*?)<br>/<br>\n\1<br>\n/g' < Pub113bk.html > Pub113bk_.html`
+#
+# (3) Extract light information by running
+# `./conv_html_lol.pl < Pub113bk_.html > Pub113bk_.csv`
+#
+# (4) You might remove HTML special characters.
+# `perl -pe 's/&.*?;//g' < Pub113bk_.csv > Pub113bk.csv`
+# You may have a look at it now by importing it into a spread sheet
+# with OpenOffice Calc, for example.
+#
+# (5) Convert into into SQL by running
+# `./gen_sql.pl < Pub113bk.csv > Pub113bk.sql`
+#
+# (6) Import it into a database, e.g. mysql by running
+# `mysql -p list_of_lights < Pub113bk.sql`
+# Don't forget to create the tables before. The definition is found in
+# "list_of_lights.sql".
+# 
 
 use strict;
 use Switch;
@@ -7,7 +32,7 @@ use Switch;
 use constant MAX_SEC_DEPTH => 3;
 
 # enable debug output (1)
-use constant DPRINT => 1;
+use constant DPRINT => 0;
 
 
 my $NBSP = '&nbsp;';
@@ -38,13 +63,13 @@ my @lbuf = ();
 sub pprogress
 {
    $| = 1;
-   print shift;
+   print STDERR shift;
 }
 
 
 sub dprint
 {
-   print shift if DPRINT;
+   print STDERR shift if DPRINT;
 }
 
 
@@ -61,7 +86,7 @@ sub output_light
 }
 
 
-dprint "PASS 1: ";
+pprogress "PASS 1: ";
 my $no_detect = 0;
 
 while (<STDIN>)
@@ -74,9 +99,9 @@ while (<STDIN>)
    $fbuf[$lineno] = $_;
 
    # progress output
-   pprogress "." unless $lineno % 100;
+   pprogress "." unless $lineno % 500;
 
-   print "$lineno: ($next_line,$prev_line,$structbreak) $_\n";
+   dprint "$lineno: ($next_line,$prev_line,$structbreak) $_\n";
 
    if ($next_line)
    {
@@ -135,7 +160,7 @@ while (<STDIN>)
          }
          else
          {
-            print STDERR "*** unknown \$next_line = $next_line\n";
+            dprint "*** unknown \$next_line = $next_line\n";
             $next_line = 0;
          }
       } # switch ($next_line)
@@ -155,15 +180,15 @@ while (<STDIN>)
 
    if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
    {
-      print "MATCH ";
+      dprint "MATCH ";
       if ($7 && ($light{'uslnr'} > $1))
       {
-#         print "ILL ($6): $_\n";
+#         dprint "ILL ($6): $_\n";
       }
       else
       {
          # progress output
-         pprogress "+";
+         pprogress "+" unless $lightcnt % 100;
 
          $lightcnt++;
          $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
@@ -229,12 +254,16 @@ sub cap_test
    return 0;
 }
 
-dprint "\n$lightcnt lights detected.\n";
-dprint "\nPASS 2: ";
+pprogress "\n$lightcnt lights detected.\n";
+pprogress "\nPASS 2: ";
 
+$lightcnt = 0;
 for my $lgt (@lbuf)
 {
-   print "/********************/\n";
+   dprint "/********************/\n";
+
+   pprogress "+" unless $lightcnt % 100;
+   $lightcnt++;
 
    $structbreak = 0;
    $next_line = 0;
@@ -243,7 +272,7 @@ for my $lgt (@lbuf)
    for (my $i = $lgt->{'lineno'}; $i < $lgt->{'lineno'} + $lgt->{'linecnt'}; $i++)
    {
       next unless $fbuf[$i];
-      print "$i: ($next_line,$prev_line,$structbreak) $fbuf[$i]\n";
+      dprint "$i: ($next_line,$prev_line,$structbreak) $fbuf[$i]\n";
 
 
       if ($lgt->{'racon'})
@@ -519,14 +548,22 @@ for my $lgt (@lbuf)
    } # for ()
 
 #   print "LIGHT:\t";
-   output_light $lgt;
+#   output_light $lgt;
 }
 
-dprint "\nPASS 3: ";
+pprogress "\n$lightcnt lights processed.\n";
+pprogress "\nPASS 3: ";
+$lightcnt = 0;
+
+my %lightnr;
+my %uslnr;
 
 for my $lgt (@lbuf)
 {
-   print "/********************/\n";
+   dprint "/********************/\n";
+
+   pprogress "+" unless $lightcnt % 100;
+   $lightcnt++;
 
    $structbreak = 0;
    $next_line = 0;
@@ -534,7 +571,7 @@ for my $lgt (@lbuf)
    for (my $i = $lgt->{'lineno'}; $i < $lgt->{'lineno'} + $lgt->{'linecnt'}; $i++)
    {
       next unless $fbuf[$i];
-      print "$i: $fbuf[$i]\n";
+      dprint "$i: $fbuf[$i]\n";
 
       $lgt->{'rem'} .= $fbuf[$i];
    }
@@ -569,7 +606,7 @@ for my $lgt (@lbuf)
    $str =~ s/$NBSP| //g;
    if ($str =~ /([nesw])\.cardinal/i)
    {
-      print "cardinal: $1\n";
+      dprint "cardinal: $1\n";
       $lgt->{'type'} = 'cardinal:' . $direction{"$1"};
    }
    elsif ($str =~ /isolated/i) { $lgt->{'type'} = 'isolated_danger';}
@@ -616,8 +653,34 @@ for my $lgt (@lbuf)
       $lgt->{'error'} .= 'position';
    }
 
+   # look for duplicate light international numbers
+   if ($lgt->{'intnr'} && $lightnr{$lgt->{'intnr'}})
+   {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'intdup';
+         dprint "DUP\n";
+   }
+   else
+   {
+      $lightnr{$lgt->{'intnr'}} = 1;
+   }
+
+   # look for duplicate light US NGA numbers
+   if ($uslnr{$lgt->{'uslnr'}})
+   {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'usldup';
+         dprint "DUP\n";
+   }
+   else
+   {
+      $uslnr{$lgt->{'uslnr'}} = 1;
+   }
+
    print "LIGHT:\t";
    output_light $lgt;
 
 }
+
+pprogress "\n$lightcnt lights processed.\n";
 

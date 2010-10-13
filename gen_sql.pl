@@ -29,23 +29,26 @@ while (<STDIN>)
    @vals = split /\t/;
 
    # convert value array to hash
+   %val = ();
    my $i = 0;
    foreach (@vals) { $val{"$keys[$i++]"} = $_; }
 
    print "-- LINENO $lcnt:\n";
    print "INSERT INTO lights VALUES (1,";
 
+   my $udup = $val{'error'} =~ /usldup/ ? 'a' : '';
    $val{'uslnr'} =~ /([0-9]+)(\.([0-9]+))?/;
    $uslnr = $1;
-   $uslsubnr = $3;
-   $uslsubnr = '' unless $3;
+   $uslsubnr = $3 . $udup;
+   #$uslsubnr = '' unless $3;
 
+   my $idup = $val{'error'} =~ /intdup/ ? 'a' : '';
    $val{'intnr'} =~ s/ //g;
    if ($val{'intnr'})
    {
       $val{'intnr'} =~ /^([A-Z])([0-9]+)(\.([0-9]+))?/;
-      $intsubnr = $4;
-      $intsubnr = '' unless $4;
+      $intsubnr = $4 . $idup;
+      #$intsubnr = '' unless $4;
       print "'$1',$2,'$intsubnr',";
    }
    else
