@@ -688,6 +688,11 @@ for my $lgt (@lbuf)
       $lgt->{'error'} .= 'beacon_guess';
    }
 
+   if (!$lgt->{'typea'})
+   {
+      $lgt->{'typea'} = 'minor';
+   }
+
    if (defined $topmark{$lgt->{'type'}} && ($lgt->{'topmark'} eq 'yes'))
    {
       $lgt->{'topmark'} = $topmark{$lgt->{'type'}};
