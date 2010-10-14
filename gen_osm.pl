@@ -14,8 +14,8 @@ print "<?xml version='1.0' encoding='UTF-8'?>\n\n<!--\n";
 my $date = `date`;
 chomp $date;
 print "OSM file generated at $date.\n";
-#print "SVN revisions:\n";
-#system 'svn --verbose ls';
+print "SVN revisions:\n";
+system 'svn --verbose ls';
 print "-->\n\n<osm version='0.6' generator='lol_gen_osm'>\n";
 
 my $id = 0;
@@ -122,16 +122,32 @@ while (my $ref = $sth->fetchrow_hashref())
       # FIXME: buoyage system should have a defined tag.
       print "         <tag k='seamark:$stype:marsys' v='$ref->{'bsystem'}' />\n" if $ref->{'bsystem'};
       print "      <tag k='seamark:$stype:shape' v='$ref->{'shape'}' />\n" if $ref->{'shape'};
+
+      if ($ref->{'shapecol'})
+      {
+         print "      <tag k='seamark:$stype:colour' v='$ref->{'shapecol'}' />\n";
+
+         # test if a shape has more than 1 color
+         my $cc = $ref->{'shapecol'};
+         $cc =~ s/[^;]//g;
+         if (length $cc > 0)
+         {
+            if ($ref->{'type'} =~ /cardinal|preferred/)
+            {
+               print "      <tag k='seamark:$stype:colour_pattern' v='horizontal_stripes' />\n";
+            }
+            elsif ($ref->{'type'} =~ /safe_water/)
+            {
+               print "      <tag k='seamark:$stype:colour_pattern' v='vertical_stripes' />\n";
+            }
+         }
+      }
    }
-   elsif ($ref->{'typea'} eq 'major')
+   else
    {
-      print "      <tag k='seamark:type' v='light_major' />\n";
+      print "      <tag k='seamark:type' v='light_$ref->{'typea'}' />\n";
    }
-   elsif ($ref->{'typea'} eq 'minor')
-   {
-      print "      <tag k='seamark:type' v='light_minor' />\n";
-   }
-   
+
    # FIXME: is this topmark definition correct?
    if ($ref->{'topmark'})
    {

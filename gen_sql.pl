@@ -77,7 +77,7 @@ while (<STDIN>)
 
    #$topm = $val{'topmark'} ? 1 : 0;
 
-   print "$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,0,'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}'";
+   print "$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,0,'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}'";
 
    print ");\n";
 
