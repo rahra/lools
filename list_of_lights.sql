@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 14. Oktober 2010 um 17:22
+-- Erstellungszeit: 14. Oktober 2010 um 18:05
 -- Server Version: 5.1.49
 -- PHP-Version: 5.3.2-2
 
@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `int_chr` char(1) NOT NULL,
   `int_nr` varchar(11) NOT NULL,
   `int_subnr` char(3) NOT NULL,
+  `usl_list` varchar(32) NOT NULL,
   `usl_nr` int(11) NOT NULL,
   `usl_subnr` char(3) NOT NULL,
   `section_name` varchar(256) NOT NULL,
@@ -59,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `bsystem` enum('A','B','') NOT NULL,
   `shape` varchar(32) NOT NULL,
   `shapecol` varchar(256) NOT NULL,
-  PRIMARY KEY (`usl_nr`,`usl_subnr`),
+  PRIMARY KEY (`usl_nr`,`usl_subnr`,`usl_list`),
   UNIQUE KEY `int_chr` (`int_chr`,`int_nr`,`int_subnr`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -70,6 +71,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
 --
 
 CREATE TABLE IF NOT EXISTS `sectors` (
+  `usl_list` varchar(32) NOT NULL,
   `usl_nr` int(11) NOT NULL,
   `usl_subnr` char(2) NOT NULL DEFAULT '',
   `sector_nr` int(2) unsigned NOT NULL AUTO_INCREMENT,
@@ -78,5 +80,5 @@ CREATE TABLE IF NOT EXISTS `sectors` (
   `colour` enum('W','R','G','Y','Bu','Or','Vi') NOT NULL,
   `range` int(3) unsigned DEFAULT NULL,
   `visibility` enum('int','unint','') NOT NULL DEFAULT '',
-  PRIMARY KEY (`usl_nr`,`usl_subnr`,`sector_nr`)
+  PRIMARY KEY (`usl_nr`,`usl_subnr`,`sector_nr`,`usl_list`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

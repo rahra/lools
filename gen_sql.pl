@@ -55,7 +55,7 @@ while (<STDIN>)
    }
    else
    {
-      print "'u','$uslnr','$uslsubnr',";
+      print "'u','$uslnr-$val{'usl_list'}','$uslsubnr',";
    }
 
    # set some missing default values if missing
@@ -76,8 +76,7 @@ while (<STDIN>)
    $group = 1 unless $5;
 
    #$topm = $val{'topmark'} ? 1 : 0;
-
-   print "$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,0,'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}'";
+   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,0,'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}'";
 
    print ");\n";
 
@@ -95,7 +94,7 @@ while (<STDIN>)
       if ($3) { $start = $3 + $5 / 60; }
       else { $start = $end; }
       $end = $7 + $9 / 60;
-      print "   INSERT INTO sectors VALUES ($uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '');\n";
+      print "   INSERT INTO sectors VALUES ('$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '');\n";
       $loop = 1;
    }
 
@@ -104,7 +103,7 @@ while (<STDIN>)
       $col = $1;
       unless ($coll =~ /$col/)
       {
-         print "   INSERT INTO sectors VALUES ($uslnr,'$uslsubnr',NULL,NULL,NULL,'$col',NULL,'');\n";
+         print "   INSERT INTO sectors VALUES ('$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,NULL,NULL,'$col',NULL,'');\n";
       }
    }
 
@@ -113,39 +112,39 @@ while (<STDIN>)
       $start= $2 + $4 / 60;
       $end = $6 + $8 / 60;
       print "-- Intensified\n";
-      print "   UPDATE sectors SET sectors.visibility='int',sectors.start=$start,sectors.end=$end WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
+      print "   UPDATE sectors SET sectors.visibility='int',sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
    elsif ($val{'sector'} =~ /Unintensified(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
    {
       $start= $2 + $4 / 60;
       $end = $6 + $8 / 60;
       print "-- Unintensified\n";
-      print "   UPDATE sectors SET sectors.visibility='unint',sectors.start=$start,sectors.end=$end WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
+      print "   UPDATE sectors SET sectors.visibility='unint',sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
    elsif ($val{'sector'} =~ /Obscured(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
    {
       $end = $2 + $4 / 60;
       $start = $6 + $8 / 60;
       print "-- Obscured\n";
-      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
+      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
    elsif ($val{'sector'} =~ /Visible(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
    {
       $start= $2 + $4 / 60;
       $end = $6 + $8 / 60;
       print "-- Visible\n";
-      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
+      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
 
    if ($val{'range'} =~ /^[0-9]+$/)
    {
-      print "   UPDATE sectors SET sectors.range=$vals[20] WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
+      print "   UPDATE sectors SET sectors.range=$val{'range'} WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
    else
    {
       while ($val{'range'} =~ /($colors)\.([0-9]+)/g)
       {
-         print "   UPDATE sectors SET sectors.range=$2 WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr' AND colour='$1';\n";
+         print "   UPDATE sectors SET sectors.range=$2 WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr' AND colour='$1';\n";
       }
    }
 }
