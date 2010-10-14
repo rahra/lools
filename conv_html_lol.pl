@@ -797,6 +797,8 @@ for my $lgt (@lbuf)
       if ($lgt->{'shapecol'} =~ /^yellow$/) { $lgt->{'type'} = 'special_purpose'; }
    }
 
+   $lgt->{'range'} =~ s/$NBSP| //g;
+
    print "LIGHT:\t";
    output_light $lgt;
 

@@ -143,7 +143,7 @@ while (<STDIN>)
    }
    else
    {
-      while ($val{'range'} =~ /($colors)\. ([0-9]+)/g)
+      while ($val{'range'} =~ /($colors)\.([0-9]+)/g)
       {
          print "   UPDATE sectors SET sectors.range=$2 WHERE usl_nr=$uslnr AND usl_subnr='$uslsubnr' AND colour='$1';\n";
       }
