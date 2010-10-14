@@ -92,11 +92,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tERROR\n";
+      print "LINENO\tSECTION\tINTNR\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'error'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'error'}\n";
 }
 
 
@@ -741,6 +741,11 @@ for my $lgt (@lbuf)
    {
       $uslnr{$lgt->{'uslnr'}} = 1;
    }
+
+   my $str = $lgt->{'struct'};
+   $str =~ s/$NBSP| //g;
+   $str =~ /(stake|withy|tower|lattice|pile|cairn|buoyant|column|post)/;
+   $lgt->{'shape'} = $1;
 
    print "LIGHT:\t";
    output_light $lgt;
