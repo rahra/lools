@@ -39,6 +39,9 @@ use constant DPRINT => 0;
 
 my $pub_nr = shift;
 
+my @pgrsc = ("-", "/", "|", "\\");
+my $pgrscnt = 0;
+
 my $NBSP = '&nbsp;';
 
 my $lineno = 0;
@@ -76,6 +79,13 @@ my @fbuf = ();
 my @lbuf = ();
 
 
+sub pgrs_char
+{
+   print STDERR "\r$pgrsc[$pgrscnt]";
+   $pgrscnt = ($pgrscnt + 1) % @pgrsc;
+}
+
+
 sub pprogress
 {
    $| = 1;
@@ -102,7 +112,7 @@ sub output_light
 }
 
 
-pprogress "PASS 1: ";
+pprogress "PASS 1:\n";
 my $no_detect = 0;
 
 while (<STDIN>)
@@ -115,7 +125,7 @@ while (<STDIN>)
    $fbuf[$lineno] = $_;
 
    # progress output
-   pprogress "." unless $lineno % 500;
+   pprogress "   [$lineno]" unless $lineno % 500;
 
    dprint "$lineno: ($next_line,$prev_line,$structbreak) $_\n";
 
@@ -215,7 +225,8 @@ while (<STDIN>)
       else
       {
          # progress output
-         pprogress "+" unless $lightcnt % 100;
+         #pprogress "+" unless $lightcnt % 100;
+         pgrs_char;
 
          $lightcnt++;
          $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
