@@ -94,11 +94,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tERROR\n";
+      print "LINENO\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$pub_nr\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'error'}\n";
+   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$pub_nr\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$l->{'error'}\n";
 }
 
 
@@ -169,6 +169,7 @@ while (<STDIN>)
             else
             {
                m/([^<]*?(\.)?)<br>$/;
+               $light{'name'} .= ' ' if $light{'name'};
                $light{'name'} .= $1;
                $namebreak = 0 if $2;
             }
@@ -192,6 +193,16 @@ while (<STDIN>)
    {
       $light{'linecnt'} = $lineno - $light{'lineno'} - 1;
       next;
+   }
+
+   # detect end of list of lights
+   if (/<b>Radiobeacons<\/b>/)
+   {
+      $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
+      for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $prev_section[$i]; }
+      push @lbuf, {%light};
+      pprogress "\nend at $lineno\n";
+      last;
    }
 
    if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
@@ -796,9 +807,17 @@ for my $lgt (@lbuf)
       if ($lgt->{'shapecol'} =~ /^red$/) { $lgt->{'type'} = 'lateral:port'; }
       if ($lgt->{'shapecol'} =~ /^green$/) { $lgt->{'type'} = 'lateral:starboard'; }
       if ($lgt->{'shapecol'} =~ /^yellow$/) { $lgt->{'type'} = 'special_purpose'; }
+
+      if ($lgt->{'name'} =~ /approach/i) { $lgt->{'type'} = 'safe_water'; }
    }
 
    $lgt->{'range'} =~ s/$NBSP| //g;
+
+   my $rem = $lgt->{'rem'};
+   $rem =~ s/$NBSP/ /g;
+   $rem =~ s/ [ ]+/ /g;
+   if ($rem =~ /(whistle|horn|siren|diaphone|bell|explosive|gong)/i) { $lgt->{'fsignal'} = lc $1; }
+   $lgt->{'rreflect'} = $rem =~ /radar reflector/i ? 1 : 0;
 
    print "LIGHT:\t";
    output_light $lgt;
@@ -806,5 +825,5 @@ for my $lgt (@lbuf)
 }
 
 pprogress "\n$lightcnt lights processed.\n";
-pprogress "$scolcnt shape colors found.\n";
+   pprogress "$scolcnt shape colors found.\n";
 

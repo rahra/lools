@@ -155,6 +155,10 @@ while (my $ref = $sth->fetchrow_hashref())
       else { print "      <tag k='seamark:topmark:shape' v='$ref->{'topmark'}' />\n"; }
    }
 
+   print "      <tag k='seamark:radar_reflector' v='yes' />\n" if $ref->{'radar_reflector'};
+
+   print "      <tag k='seamark:fog_signal:category' v='$ref->{'fsignal'}' />\n" if $ref->{'fsignal'};
+
    print "   </node>\n";
 }
 $sth->finish();
