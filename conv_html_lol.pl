@@ -57,15 +57,15 @@ my $colors = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
 my %direction = ('N' => 'north', 'E' => 'east', 'S' => 'south', 'W' => 'west');
 my %topmark = (
-   'cardinal:north' => '2cones_pointup',
-   'cardinal:east' => '2cones_base2base',
-   'cardinal:south' => '2cones_pointdown', 
-   'cardinal:west' => '2cones_point2point',
+   'cardinal:north' => '2 cones up',
+   'cardinal:east' => '2 cones base together',
+   'cardinal:south' => '2 cones down', 
+   'cardinal:west' => '2 cones point together',
    'safe_water' => 'sphere',
-   'isolated_danger' => '2spheres',
-   'special_purpose' => 'xshape',
-   'lateral:port' => 'cube',
-   'lateral:starboard' => 'cone_pointup'
+   'isolated_danger' => '2 spheres',
+   'special_purpose' => 'x-shape',
+   'lateral:port' => 'cylinder',
+   'lateral:starboard' => 'cone, point up'
 );
 
 my @section = ();
@@ -114,6 +114,7 @@ sub output_light
 
 pprogress "PASS 1:\n";
 my $no_detect = 0;
+my $start = 0;
 
 while (<STDIN>)
 {
@@ -125,9 +126,21 @@ while (<STDIN>)
    $fbuf[$lineno] = $_;
 
    # progress output
+   pgrs_char unless $lineno % 10;
    pprogress "   [$lineno]" unless $lineno % 500;
 
    dprint "$lineno: ($next_line,$prev_line,$structbreak) $_\n";
+
+   # find the beginning of the lights.
+   if ($start < 2)
+   {
+      if (/Section 1</)
+      {
+         $start++;
+         pprogress "\nbeginning at line $lineno\n";
+      }
+      next;
+   }
 
    if ($next_line)
    {
@@ -224,10 +237,6 @@ while (<STDIN>)
       }
       else
       {
-         # progress output
-         #pprogress "+" unless $lightcnt % 100;
-         pgrs_char;
-
          $lightcnt++;
          $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
          for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $prev_section[$i]; }
@@ -639,7 +648,7 @@ for my $lgt (@lbuf)
    $sec =~ s/$NBSP| //g;
 
    my $deg_pat = "([0-9]{3}°([0-9]{2}′)?)|shore|obsc\.";
-   while ($sec =~ /((Visible|Intensified|Obscured|($colors)\.)(from|\(unint\.\)|\(int.\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
+   while ($sec =~ /((Visible|Intensified|Obscured|($colors)\.)(from|\(unint\.\)|\(int.\)|\(intensified\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
    {
       $lgt->{'sector'} .= ',' if $lgt->{'sector'};
       $lgt->{'sector'} .= $1;
@@ -727,10 +736,8 @@ for my $lgt (@lbuf)
       $lgt->{'error'} .= 'beacon_guess';
    }
 
-   if (!$lgt->{'typea'})
-   {
-      $lgt->{'typea'} = 'minor';
-   }
+   # default to light_minor if no type could be detected
+   if (!$lgt->{'typea'}) { $lgt->{'typea'} = 'minor'; }
 
    if (defined $topmark{$lgt->{'type'}} && ($lgt->{'topmark'} eq 'yes'))
    {
@@ -816,10 +823,10 @@ for my $lgt (@lbuf)
    if (!$lgt->{'type'} && (($lgt->{'typea'} eq 'beacon') || ($lgt->{'typea'} eq 'buoy')))
    {
       if ($lgt->{'shapecol'} =~ /^red$/) { $lgt->{'type'} = 'lateral:port'; }
-      if ($lgt->{'shapecol'} =~ /^green$/) { $lgt->{'type'} = 'lateral:starboard'; }
-      if ($lgt->{'shapecol'} =~ /^yellow$/) { $lgt->{'type'} = 'special_purpose'; }
-
-      if ($lgt->{'name'} =~ /approach/i) { $lgt->{'type'} = 'safe_water'; }
+      elsif ($lgt->{'shapecol'} =~ /^green$/) { $lgt->{'type'} = 'lateral:starboard'; }
+      elsif ($lgt->{'shapecol'} =~ /^yellow$/) { $lgt->{'type'} = 'special_purpose'; }
+      elsif ($lgt->{'name'} =~ /approach/i) { $lgt->{'type'} = 'safe_water'; }
+      else { $lgt->{'typea'} = 'minor'; }
    }
 
    $lgt->{'range'} =~ s/$NBSP| //g;
