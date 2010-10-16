@@ -1,4 +1,3 @@
-NR=113
 TARGET=Pub$(NR)bk
 LOGFILE=lol.log
 
@@ -24,7 +23,7 @@ $(TARGET).mysql: $(TARGET).sql
 	touch $(TARGET).mysql
 
 $(TARGET).osm: $(TARGET).mysql
-	./gen_osm.pl > $(TARGET).osm
+	./gen_osm.pl $(NR) > $(TARGET).osm
 
 $(TARGET).osm.bz2: $(TARGET).osm
 	bzip2 -c $(TARGET).osm > $(TARGET).osm.bz2
