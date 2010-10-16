@@ -6,8 +6,9 @@ use DBI;
 my $dsn = "DBI:mysql:database=list_of_lights;host=localhost;port=3306";
 my $dbh = DBI->connect($dsn, "root", "060378hasen", {RaiseError => 1});
 
-
-my $sth = $dbh->prepare("SELECT * FROM lights");
+my $pub_nr = shift;
+my $where = "WHERE usl_list='$pub_nr'" if $pub_nr;
+my $sth = $dbh->prepare("SELECT * FROM lights $where");
 $sth->execute();
 
 print "<?xml version='1.0' encoding='UTF-8'?>\n\n<!--\n";
@@ -21,6 +22,14 @@ print "-->\n\n<osm version='0.6' generator='lol_gen_osm'>\n";
 my $id = 0;
 while (my $ref = $sth->fetchrow_hashref())
 {
+   if ($ref->{'error'} =~ /position/)
+   {
+      print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
+      print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
+      print STDERR "\n";
+      next;
+   }
+
    $id--;
    print "   <node id='$id' action='modify' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
 
