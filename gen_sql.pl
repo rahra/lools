@@ -2,6 +2,7 @@
 
 use strict;
 
+my $pub_nr = shift;
 
 my $lcnt = 1;
 my $colors = "W|R|G|Y|Bu|Or|Vi";
@@ -15,7 +16,8 @@ my $char;
 my $group;
 #my $topm;
  
-print "TRUNCATE lights;\nTRUNCATE sectors;\n\n";
+if ($pub_nr) { print "DELETE FROM sectors WHERE usl_list='$pub_nr';\nDELETE FROM lights WHERE usl_list='$pub_nr';\n\n"; }
+else { print "DELETE FROM sectors;\nDELETE FROM lights;\n\n"; }
 
 # the first line of the csv file must be a header line
 $_ = <STDIN>;
@@ -89,14 +91,23 @@ while (<STDIN>)
    my $end = 0;
 
    # insert all sectors that are found
-   while ($val{'sector'} =~ /($colors)\.?(([0-9]{3,3})°(([0-9]+)′)?)?\-(([0-9]{3,3})°(([0-9]+)′)?)/g)
+   my $intensv = '\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\)';
+   if ($val{'sector'} =~ /$intensv/) { print STDERR "$uslnr, $val{'sector'}\n"; }
+   while ($val{'sector'} =~ /($colors)\.?($intensv)?(([0-9]{3,3})°(([0-9]+)′)?)?\-(([0-9]{3,3})°(([0-9]+)′)?)/g)
    {
+      print STDERR " $uslnr 1:$1 2:$2 3:$3 4:$4 5:$5 6:$6 7:$7 8:$8 9:$9 10:$10\n";
       $col = $1;
       $coll .= "$1,";
-      if ($3) { $start = $3 + $5 / 60; }
+      if ($4) { $start = $4 + $6 / 60; }
       else { $start = $end; }
-      $end = $7 + $9 / 60;
-      print "   INSERT INTO sectors VALUES ('$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '');\n";
+      $end = $8 + $10 / 60;
+      my $vis = "";
+      if ($2)
+      {
+         if ($2 =~ /unint/) { $vis = "unint"; }
+         else { $vis = "int"; }
+      }
+      print "   INSERT INTO sectors VALUES ('$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
       $loop = 1;
    }
 

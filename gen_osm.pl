@@ -67,7 +67,7 @@ while (my $ref = $sth->fetchrow_hashref())
    }
 
 
-   my $sti = $dbh->prepare("SELECT * FROM sectors WHERE usl_nr='$ref->{'usl_nr'}' AND usl_subnr='$ref->{'usl_subnr'}'");
+   my $sti = $dbh->prepare("SELECT * FROM sectors WHERE usl_list='$ref->{'usl_list'}' AND usl_nr='$ref->{'usl_nr'}' AND usl_subnr='$ref->{'usl_subnr'}'");
    $sti->execute();
    my $rcnt = $sti->rows;
    my $sector_nr;
@@ -94,7 +94,7 @@ while (my $ref = $sth->fetchrow_hashref())
       }
       if ($reg->{'visibility'} eq 'unint')
       {
-         print "         <tag k='seamark:light:$sector_nr:visibility' v='unintensified' />\n";
+         print "         <tag k='seamark:light$sector_nr:visibility' v='unintensified' />\n";
       }
 
       my $col;
@@ -132,7 +132,7 @@ while (my $ref = $sth->fetchrow_hashref())
          $cc =~ s/[^;]//g;
          if (length $cc > 0)
          {
-            if ($ref->{'type'} =~ /cardinal|preferred/)
+            if ($ref->{'type'} =~ /cardinal|preferred|isolated/)
             {
                print "      <tag k='seamark:$stype:colour_pattern' v='horizontal_stripes' />\n";
             }

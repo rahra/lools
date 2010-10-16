@@ -1,13 +1,14 @@
-NR=114
+NR=113
 TARGET=Pub$(NR)bk
+LOGFILE=lol.log
 
 all: $(TARGET).osm.bz2
 
 $(TARGET).html: $(TARGET).pdf
-	pdftohtml -i -noframes $(TARGET).pdf > /dev/null
+	pdftohtml -i -noframes $(TARGET).pdf > /dev/null 2> $(LOGFILE)
 
 $(TARGET)_.html: $(TARGET).html
-	perl -pe 's/<br>(.*?)<br>/<br>\n\1<br>\n/g' < $(TARGET).html > $(TARGET)_.html
+	perl -pe 's/<br>(.*?)<br>/<br>\n\1<br>\n/g' < $(TARGET).html > $(TARGET)_.html 2> $(LOGFILE)
 
 $(TARGET)_.csv: $(TARGET)_.html
 	./conv_html_lol.pl $(NR) < $(TARGET)_.html > $(TARGET)_.csv
@@ -16,7 +17,7 @@ $(TARGET).csv: $(TARGET)_.csv
 	perl -pe 's/&.*?;//g' < $(TARGET)_.csv > $(TARGET).csv
 
 $(TARGET).sql: $(TARGET).csv
-	./gen_sql.pl $(NR) < $(TARGET).csv > $(TARGET).sql
+	./gen_sql.pl $(NR) < $(TARGET).csv > $(TARGET).sql 2> $(LOGFILE)
 
 $(TARGET).mysql: $(TARGET).sql
 	mysql -ulol -plol1234 list_of_lights < $(TARGET).sql
