@@ -1,11 +1,10 @@
 NR=114
-FIRSTLINE=32
 TARGET=Pub$(NR)bk
 
 all: $(TARGET).osm.bz2
 
 $(TARGET).html: $(TARGET).pdf
-	pdftohtml -f $(FIRSTLINE) -noframes $(TARGET).pdf > /dev/null
+	pdftohtml -i -noframes $(TARGET).pdf > /dev/null
 
 $(TARGET)_.html: $(TARGET).html
 	perl -pe 's/<br>(.*?)<br>/<br>\n\1<br>\n/g' < $(TARGET).html > $(TARGET)_.html
@@ -17,7 +16,7 @@ $(TARGET).csv: $(TARGET)_.csv
 	perl -pe 's/&.*?;//g' < $(TARGET)_.csv > $(TARGET).csv
 
 $(TARGET).sql: $(TARGET).csv
-	./gen_sql.pl < $(TARGET).csv > $(TARGET).sql
+	./gen_sql.pl $(NR) < $(TARGET).csv > $(TARGET).sql
 
 $(TARGET).mysql: $(TARGET).sql
 	mysql -ulol -plol1234 list_of_lights < $(TARGET).sql
