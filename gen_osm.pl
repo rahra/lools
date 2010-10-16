@@ -15,8 +15,8 @@ print "<?xml version='1.0' encoding='UTF-8'?>\n\n<!--\n";
 my $date = `date`;
 chomp $date;
 print "OSM file generated at $date.\n";
-print "SVN revisions:\n";
-system 'svn --verbose ls';
+#print "SVN revisions:\n";
+#system 'svn --verbose ls';
 print "-->\n\n<osm version='0.6' generator='lol_gen_osm'>\n";
 
 my $id = 0;
