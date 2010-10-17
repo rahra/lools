@@ -19,6 +19,11 @@ clean:
 		make -C $$nr clean NR=$$nr ; \
 		done
 
+cleancsv:
+	for nr in $(PUB) ; do \
+		make -C $$nr cleancsv NR=$$nr ; \
+		done
+
 cleanall:
 	for nr in $(PUB) ; do \
 		rm -rf $$nr ; \

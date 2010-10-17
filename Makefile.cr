@@ -14,13 +14,14 @@ $(TARGET)_.csv: $(TARGET)_.html
 	$(BINPATH)/conv_html_lol.pl $(NR) < $(TARGET)_.html > $(TARGET)_.csv
 
 $(TARGET).csv: $(TARGET)_.csv
-	perl -pe 's/&.*?;//g' < $(TARGET)_.csv > $(TARGET).csv
+	#perl -pe 's/&.*?;//g' < $(TARGET)_.csv > $(TARGET).csv
+	perl -pe 's/&nbsp;/ /g' < $(TARGET)_.csv > $(TARGET).csv
 
 $(TARGET).sql: $(TARGET).csv
 	$(BINPATH)/gen_sql.pl $(NR) < $(TARGET).csv > $(TARGET).sql 2> $(LOGFILE)
 
 $(TARGET).mysql: $(TARGET).sql
-	mysql -ulol -plol1234 list_of_lights < $(TARGET).sql
+	mysql -f -ulol -plol1234 list_of_lights < $(TARGET).sql
 	touch $(TARGET).mysql
 
 $(TARGET).osm: $(TARGET).mysql
@@ -31,6 +32,9 @@ $(TARGET).osm.bz2: $(TARGET).osm
 
 clean:
 	rm -f $(TARGET).html $(TARGET)_.html $(TARGET).csv $(TARGET)_.csv $(TARGET).sql $(TARGET).mysql $(TARGET).osm $(TARGET).osm.bz2
+
+cleancsv:
+	rm -f $(TARGET)_.csv
 
 .PHONY: clean
 

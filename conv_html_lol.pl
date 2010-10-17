@@ -35,7 +35,7 @@ use Switch;
 use constant MAX_SEC_DEPTH => 3;
 
 # enable debug output (1)
-use constant DPRINT => 0;
+use constant DPRINT => 1;
 
 my $pub_nr = shift;
 
@@ -81,6 +81,7 @@ my @lbuf = ();
 
 sub pgrs_char
 {
+   return if DPRINT;
    print STDERR "\r$pgrsc[$pgrscnt]";
    $pgrscnt = ($pgrscnt + 1) % @pgrsc;
 }
@@ -603,7 +604,7 @@ for my $lgt (@lbuf)
 }
 
 pprogress "\n$lightcnt lights processed.\n";
-pprogress "\nPASS 3: ";
+pprogress "\nPASS 3:\n";
 $lightcnt = 0;
 
 my %lightnr;
@@ -614,7 +615,8 @@ for my $lgt (@lbuf)
 {
    dprint "/********************/\n";
 
-   pprogress "+" unless $lightcnt % 100;
+   #pprogress "+" unless $lightcnt % 100;
+   pgrs_char;
    $lightcnt++;
 
    $structbreak = 0;
@@ -625,7 +627,16 @@ for my $lgt (@lbuf)
       next unless $fbuf[$i];
       dprint "$i: $fbuf[$i]\n";
 
-      $lgt->{'rem'} .= $fbuf[$i];
+      $fbuf[$i] =~ s/<br>//g;
+      unless ($lgt->{'name'} =~ /\.$/)
+      {
+         $lgt->{'name'} .= $fbuf[$i];
+      }
+      else
+      {
+         $lgt->{'rem'} .= $fbuf[$i];
+      }
+      $fbuf[$i] = "";
    }
 
    # check if light character contains muliplicity
@@ -843,5 +854,17 @@ for my $lgt (@lbuf)
 }
 
 pprogress "\n$lightcnt lights processed.\n";
-   pprogress "$scolcnt shape colors found.\n";
+pprogress "$scolcnt shape colors found.\n";
+
+#pprogress "\nPASS 4: ";
+#$lightcnt = 0;
+#
+#for my $lgt (@lbuf)
+#{
+#   pgrs_char;
+#
+#   print "LIGHT:\t";
+#   output_light $lgt;
+#}
+
 
