@@ -35,7 +35,7 @@ use Switch;
 use constant MAX_SEC_DEPTH => 3;
 
 # enable debug output (1)
-use constant DPRINT => 1;
+use constant DPRINT => 0;
 
 my $pub_nr = shift;
 

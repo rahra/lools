@@ -11,7 +11,8 @@ all:
 		if test ! -e $$nr/Pub$${nr}bk.pdf ; then \
 			ln -s ../Pub$${nr}bk.pdf $$nr/Pub$${nr}bk.pdf ; \
 		fi ; \
-		make -C $$nr NR=$$nr ; \
+		echo NR=$$nr > $$nr/NR ; \
+		make -C $$nr ; \
 		done
 
 clean:
