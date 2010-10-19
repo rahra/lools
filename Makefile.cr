@@ -15,7 +15,7 @@ $(TARGET).html: $(TARGET).pdf
 	pdftohtml -i -noframes $(TARGET).pdf > /dev/null 2>> $(LOGFILE)
 
 $(TARGET)_.html: $(TARGET).html
-	perl -pe 's/<br>(.*?)<br>/<br>\n\1<br>\n/g' < $(TARGET).html > $(TARGET)_.html 2>> $(LOGFILE)
+	perl -pe 's/<br>(.*?)<br>/<br>\n\1<br>\n/g;s/^(&nbsp;| )+//g;' < $(TARGET).html | perl -pe 's/^(&nbsp;| )+//g;' > $(TARGET)_.html 2>> $(LOGFILE)
 
 $(TARGET)_.csv: $(TARGET)_.html
 	$(BINPATH)/conv_html_lol.pl < $(TARGET)_.html > $(TARGET)_.csv
