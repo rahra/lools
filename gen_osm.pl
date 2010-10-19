@@ -6,7 +6,9 @@ use DBI;
 my $dsn = "DBI:mysql:database=list_of_lights;host=localhost;port=3306";
 my $dbh = DBI->connect($dsn, "root", "060378hasen", {RaiseError => 1});
 
-my $pub_nr = shift;
+my $pub_nr = `cat NR`;
+$pub_nr =~ s/[^0-9]//g;
+print STDERR "Generating OSM for Pub. $pub_nr\n";
 my $where = "WHERE usl_list='$pub_nr'" if $pub_nr;
 my $sth = $dbh->prepare("SELECT * FROM lights $where");
 $sth->execute();
@@ -14,7 +16,7 @@ $sth->execute();
 print "<?xml version='1.0' encoding='UTF-8'?>\n\n<!--\n";
 my $date = `date`;
 chomp $date;
-print "OSM file generated at $date.\n";
+print "OSM file generated at $date.\nUse at your own risk.\n";
 #print "SVN revisions:\n";
 #system 'svn --verbose ls';
 print "-->\n\n<osm version='0.6' generator='lol_gen_osm'>\n";
@@ -35,6 +37,7 @@ while (my $ref = $sth->fetchrow_hashref())
 
    # FIXME: where to put the name of a light?
    $ref->{'name'} =~ s/'/&apos;/g;
+   $ref->{'name'} =~ s/<.*?>//g;
    print "      <tag k='name' v='$ref->{'name'}' />\n";
 #   $ref->{'name_comb'} =~ s/'/&apos;/g;
 #   print "      <tag k='loc_name' v='$ref->{'name'}' />\n";
@@ -45,6 +48,7 @@ while (my $ref = $sth->fetchrow_hashref())
    else { $intnr = "$ref->{'int_chr'} $ref->{'int_nr'}"; }
 
    print "      <tag k='ref' v='$intnr' />\n";
+   print "      <tag k='source' v='$ref->{'source'}' />\n";
    print "      <tag k='seamark:light:ref' v='$intnr' />\n";
 
    $ref->{'character'} =~ s/\.//g;
