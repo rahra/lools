@@ -82,7 +82,7 @@ while (<STDIN>)
    my $fsignal = $val{'fsignal'} ? "'$val{'fsignal'}'" : 'NULL';
 
    #$topm = $val{'topmark'} ? 1 : 0;
-   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}'";
+   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'remark'}'";
 
    print ");\n";
 

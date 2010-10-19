@@ -44,6 +44,7 @@ my @pgrsc = ("-", "/", "|", "\\");
 my $pgrscnt = 0;
 
 my $NBSP = '&nbsp;';
+my $SPACES = "$NBSP| ";
 
 my $lineno = 0;
 my $lightcnt = 0;
@@ -54,7 +55,7 @@ my $structbreak = 0;
 my $next_line = 0;
 my $prev_line = 0;
 
-my $colors = "W|R|G|Y|Bu|Or|Vi";
+my $COLORS = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
 my %direction = ('N' => 'north', 'E' => 'east', 'S' => 'south', 'W' => 'west');
 my %topmark = (
@@ -391,14 +392,14 @@ for my $lgt (@lbuf)
                {
                   $next_line = 0;
                   # this line might be a color range
-                  if ($fbuf[$i] =~ /^(($colors)\.)<br>/)
+                  if ($fbuf[$i] =~ /^(($COLORS)\.)<br>/)
                   {
                      $lgt->{'range'} .= ',' if $lgt->{'range'};
                      $lgt->{'range'} .= $1;
                      $prev_line = 'PL_RANGE_PART';
                      $next_line = 'NL_RNGPRT_STRUCT';
                   }
-                  elsif ($fbuf[$i] =~ /^($colors)\.($NBSP| )(<b>)?([0-9]+)(<\/b>)?<br>/)
+                  elsif ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
                   {
                      $lgt->{'range'} .= "," if $lgt->{'range'};
                      $lgt->{'range'} .= "$1. $4";
@@ -420,7 +421,7 @@ for my $lgt (@lbuf)
                      $lgt->{'range'} .= $1;
                      $prev_line = 'PL_CRNG';
                   }
-                  elsif ($fbuf[$i] =~ /^([0-9]+)($NBSP| )(.*?(\.)?)<br>/)
+                  elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)<br>/)
                   {
                      $lgt->{'range'} .= $1;
                      $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
@@ -485,7 +486,7 @@ for my $lgt (@lbuf)
             }
          }
 
-         if ($fbuf[$i] =~ /^(($colors)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?([^<]*?(\.)?)<br>/)
+         if ($fbuf[$i] =~ /^(($COLORS)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?([^<]*?(\.)?)<br>/)
          {
             #$lgt->{'range'} .= ',' if $lgt->{'range'};
             if ($lgt->{'range'})
@@ -531,16 +532,24 @@ for my $lgt (@lbuf)
             next;
          }
 
-         if ($fbuf[$i] =~ /^(fl|lt)\.($NBSP| )([0-9]+(\.[0-9])?)s, ec\. ([0-9]+(\.[0-9])?)s/)
+         if ($fbuf[$i] =~ /^(([0-9])($SPACES))?(($COLORS)\.($SPACES))?(fl|lt)\.($SPACES)([0-9]+(\.[0-9])?)s(,($SPACES)ec\.($SPACES)([0-9]+(\.[0-9])?)s)?/)
          {
             $lgt->{'sequence'} .= "," if $lgt->{'sequence'};
-            $lgt->{'sequence'} .= "$3+($5)";
+            if ($2 || $5)
+            { 
+               $lgt->{'sequence'} .= "[";
+               $lgt->{'sequence'} .= $2 if $2;
+               $lgt->{'sequence'} .= "$5." if $5;
+               $lgt->{'sequence'} .= "]";
+            }
+            $lgt->{'sequence'} .= "$9";
+            $lgt->{'sequence'} .= "+($14)" if $14;
             $fbuf[$i] = "";
             $prev_line = 'PL_SEQ';
             next;
          }
 
-         if ($fbuf[$i] =~ /^($colors)\.<br>/)
+         if ($fbuf[$i] =~ /^($COLORS)\.<br>/)
          {
             $lgt->{'range'} .= "," if $lgt->{'range'};
             $lgt->{'range'} .= "$1. ";
@@ -550,7 +559,7 @@ for my $lgt (@lbuf)
             next;
          }
 
-         if ($fbuf[$i] =~ /^($colors)\.($NBSP| )(<b>)?([0-9]+)(<\/b>)?<br>/)
+         if ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
          {
             $lgt->{'range'} .= "," if $lgt->{'range'};
             $lgt->{'range'} .= "$1. $4";
@@ -666,17 +675,17 @@ for my $lgt (@lbuf)
 
    # try to detect sectors
    my $sec = $lgt->{'rem'};
-   $sec =~ s/$NBSP| //g;
+   $sec =~ s/$SPACES//g;
 
    my $deg_pat = "([0-9]{3}°([0-9]{2}′)?)|shore|obsc\.";
-   while ($sec =~ /((Visible|Intensified|Obscured|($colors)\.)(from|\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
+   while ($sec =~ /((Visible|Intensified|Obscured|($COLORS)\.)(from|\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
    {
       $lgt->{'sector'} .= ',' if $lgt->{'sector'};
       $lgt->{'sector'} .= $1;
    }
 
    my $str = $lgt->{'struct'};
-   $str =~ s/$NBSP| //g;
+   $str =~ s/$SPACES//g;
    if ($str =~ /([nesw])\.cardinal/i)
    {
       dprint "cardinal: $1\n";
@@ -692,7 +701,7 @@ for my $lgt (@lbuf)
    if ($lgt->{'cat'} eq 'i')
    {
       my $name = $lgt->{'name'};
-      $name =~ s/$NBSP| //g;
+      $name =~ s/$SPACES//g;
 
       if ($name =~ /LIGHTSHIP/)
       {
@@ -726,7 +735,7 @@ for my $lgt (@lbuf)
    {
       $lgt->{'bsystem'} = $1;
       my $str = $lgt->{'struct'};
-      $str =~ s/$NBSP| //g;
+      $str =~ s/$SPACES//g;
       if ($str =~ /\b(STARBOARD|PORT|GRG|RGR)\b/)
       {
          my $side = $1;
@@ -765,7 +774,7 @@ for my $lgt (@lbuf)
       $lgt->{'topmark'} = $topmark{$lgt->{'type'}};
    }
 
-   if ($lgt->{'struct'} =~ /;($NBSP| )([0-9]+)\./)
+   if ($lgt->{'struct'} =~ /;($SPACES)([0-9]+)\./)
    {
       $lgt->{'strcthgt_ft'} = $2;
    }
@@ -815,7 +824,7 @@ for my $lgt (@lbuf)
    }
 
    my $str = $lgt->{'struct'};
-   $str =~ s/$NBSP| //g;
+   $str =~ s/$SPACES//g;
    $str =~ /(stake|withy|tower|lattice|pile|cairn|buoyant|column|post|pillar|conical|can|spherical|spar|barrel|super-boy)/;
    $lgt->{'shape'} = $1;
 
@@ -850,7 +859,7 @@ for my $lgt (@lbuf)
       else { $lgt->{'typea'} = 'minor'; }
    }
 
-   $lgt->{'range'} =~ s/$NBSP| //g;
+   $lgt->{'range'} =~ s/$SPACES//g;
 
    my $rem = $lgt->{'rem'};
    $rem =~ s/$NBSP/ /g;
