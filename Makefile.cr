@@ -1,3 +1,5 @@
+include NR
+
 TARGET=Pub$(NR)bk
 LOGFILE=lol.log
 BINPATH=..
