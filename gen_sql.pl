@@ -2,7 +2,9 @@
 
 use strict;
 
-my $pub_nr = shift;
+#my $pub_nr = shift;
+my $pub_nr = `cat NR`;
+$pub_nr =~ s/[^0-9]//g;
 
 my $lcnt = 1;
 my $colors = "W|R|G|Y|Bu|Or|Vi";

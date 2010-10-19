@@ -140,6 +140,7 @@ while (<STDIN>)
       if (/PUB\. ([0-9]+)/)
       {
          $pub_nr = $1;
+         `echo NR=$pub_nr > NR`;
          $source = "US NGA. List of Lights, Pub. $pub_nr. $source.";
          pprogress "$source\n";
       }
