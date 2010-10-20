@@ -35,7 +35,7 @@ use Switch;
 use constant MAX_SEC_DEPTH => 3;
 
 # enable debug output (1)
-use constant DPRINT => 0;
+use constant DPRINT => 1;
 
 my $pub_nr;
 my $source;
@@ -51,6 +51,7 @@ my $lightcnt = 0;
 my $lightno = 0;
 my $namebreak = 0;
 my $structbreak = 0;
+my $charbreak = 0;
 
 my $next_line = 0;
 my $prev_line = 0;
@@ -132,7 +133,7 @@ while (<STDIN>)
    pgrs_char unless $lineno % 10;
    pprogress "   [$lineno]" unless $lineno % 500;
 
-   dprint "$lineno: ($next_line,$prev_line,$structbreak) $_\n";
+   dprint "$lineno: ($next_line,$prev_line,$structbreak,$charbreak) $_\n";
 
    # find the beginning of the lights.
    if ($start < 2)
@@ -163,13 +164,20 @@ while (<STDIN>)
          {
             $next_line = 0;
 
-            if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*)<\/b>)(\([^\)]*\))?<br>/)
+            if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*)<\/b>)(.*?)<br>/)
             {
                $light{'lat'} = $1;
                $light{'latd'} = $2 + $3 / 60.0;
                if ($4 eq "S") { $light{'latd'} = -$light{'latd'}; }
                $light{'char'} = $6;
-               if ($7) { $light{'mpos'} = $7; }
+               if ($7)
+               {
+                  $light{'mpos'} = $7;
+                  unless ($light{'mpos'} =~ /\)$/)
+                  {
+                     $charbreak = 1;
+                  }
+               }
                $nxt = 1;
             }
             elsif (/(0°($NBSP)00.0´)<br>/)
@@ -240,6 +248,7 @@ while (<STDIN>)
       last;
    }
 
+   # detect US NGA number
    if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
    {
       dprint "MATCH ";
@@ -261,6 +270,7 @@ while (<STDIN>)
          $lightno++;
          $namebreak = 0;
          $structbreak = 0;
+         $charbreak = 0;
          $next_line = 0;
 
          %prev_light = %light;
@@ -287,6 +297,7 @@ while (<STDIN>)
       next;
    }
 
+   # detect section
    if (/(([\-]*)?[^:]*):<br>$/)
    {
       $section[length $2] = $1;
@@ -300,6 +311,16 @@ while (<STDIN>)
       $light{'lond'} = $2 + $3 / 60.0;
       if ($4 eq "W") { $light{'lond'} = -$light{'lond'}; }
       next;
+   }
+
+   if ($charbreak)
+   {
+      if (/^([^(]*\))<br>/)
+      {
+         $charbreak = 0;
+         $light{'mpos'} .= $1;
+         next;
+      }
    }
 
    $no_detect = 1;
@@ -866,6 +887,9 @@ for my $lgt (@lbuf)
    $rem =~ s/ [ ]+/ /g;
    if ($rem =~ /(whistle|horn|siren|diaphone|bell|explosive|gong)/i) { $lgt->{'fsignal'} = lc $1; }
    $lgt->{'rreflect'} = $rem =~ /radar reflector/i ? 1 : 0;
+
+   $lgt->{'mpos'} =~ /^\((.*?)\.?\)$/;
+   $lgt->{'mpos'} = $1;
 
    print "LIGHT:\t";
    output_light $lgt;
