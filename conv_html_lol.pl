@@ -423,13 +423,22 @@ for my $lgt (@lbuf)
          next;
       }
  
-         if ($fbuf[$i] =~ /RACON/)
-         {
-            $lgt->{'racon'} = $fbuf[$i];
-            $fbuf[$i] = "";
-            $prev_line = 'PL_RACON';
-            next;
-         }
+      # sometimes the name contains RACON
+      if ($fbuf[$i] =~ /^(.*?RACON\.)<br>$/)
+      {
+         $lgt->{'name'} .= $1;
+         $fbuf[$i] = "";
+         $prev_line = 'PL_NAME';
+         next;
+      }
+
+      if ($fbuf[$i] =~ /RACON/)
+      {
+         $lgt->{'racon'} = $fbuf[$i];
+         $fbuf[$i] = "";
+         $prev_line = 'PL_RACON';
+         next;
+      }
 
          # detect second light
          # FIXME: pattern does not work
