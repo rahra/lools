@@ -108,17 +108,20 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
+      print "LINENO\tAREA\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tLAT\tLON\tLATD\tLOND\tCHARACTER\tALTCHAR\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'section'}\t$l->{'intnr'}\t$pub_nr\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
+   print "$l->{'lineno'}\t$l->{'area'}\t$l->{'section'}\t$l->{'intnr'}\t$pub_nr\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'altchar'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
 }
 
 
 pprogress "PASS 1:\n";
 my $no_detect = 0;
 my $start = 0;
+my $areaguess;
+my $area;
+#my $prev_area;
 
 while (<STDIN>)
 {
@@ -164,24 +167,37 @@ while (<STDIN>)
          {
             $next_line = 0;
 
+            # detect latitude/character line.
             if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*)<\/b>)(.*?)<br>/)
             {
+               $prev_line = "LAT";
                $light{'lat'} = $1;
                $light{'latd'} = $2 + $3 / 60.0;
                if ($4 eq "S") { $light{'latd'} = -$light{'latd'}; }
                $light{'char'} = $6;
                if ($7)
                {
-                  $light{'mpos'} = $7;
-                  unless ($light{'mpos'} =~ /\)$/)
+                  my $q = $7;
+                  # detect if there is an alternate character
+                  if ($q =~ /($SPACES)or($SPACES)(<b>(.*?)<\/b>)(.*)/)
                   {
-                     $charbreak = 1;
+                     $light{'altchar'} = "$4 $5";
+                     dprint "ALTCHAR: $light{'altchar'}\n";
+                  }
+                  else
+                  {
+                     $light{'mpos'} = $7;
+                     unless ($light{'mpos'} =~ /\)$/)
+                     {
+                        $charbreak = 1;
+                     }
                   }
                }
                $nxt = 1;
             }
             elsif (/(0°($NBSP)00.0´)<br>/)
             {
+               $prev_line = "LAT0";
                $light{'lat'} = $1;
                $light{'latd'} = 0.0;
                $next_line = 'NL_CHAR';
@@ -193,6 +209,7 @@ while (<STDIN>)
             $next_line = 0;
             if (/<b>([^<]*)<\/b>(\([^\)]*\))?<br>/)
             {
+               $prev_line = "CHAR";
                $light{'char'} = $1;
                #if ($2) { $light{'mpos'} = $2; }
                $light{'mpos'} = $2 if $2;
@@ -205,21 +222,26 @@ while (<STDIN>)
 
             if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br>/)
             {
+               $prev_line = "LON";
                $light{'lon'} = $1;
                $light{'lond'} = $2 + $3 / 60.0;
                if ($4 eq "W") { $light{'lond'} = -$light{'lond'}; }
             }
             else
             {
-               m/([^<]*?(\.)?)<br>$/;
-               $light{'name'} .= ' ' if $light{'name'};
-               $light{'name'} .= $1;
-               $namebreak = 0 if $2;
+               if (/([^<]*?(\.)?)<br>$/)
+               {
+                  $prev_line = "NAME";
+                  $light{'name'} .= ' ' if $light{'name'};
+                  $light{'name'} .= $1;
+                  $namebreak = 0 if $2;
+               }
             }
             $nxt = 1;
          }
          else
          {
+            $prev_line = 0;
             dprint "*** unknown \$next_line = $next_line\n";
             $next_line = 0;
          }
@@ -234,6 +256,8 @@ while (<STDIN>)
    # detect page break
    if (/^<hr>$/)
    {
+      $prev_line = 0;
+      $next_line = 0;
       $light{'linecnt'} = $lineno - $light{'lineno'} - 1;
       next;
    }
@@ -254,10 +278,17 @@ while (<STDIN>)
       dprint "MATCH ";
       if ($7 && ($light{'uslnr'} > $1))
       {
+         $prev_line = 0;
 #         dprint "ILL ($6): $_\n";
       }
       else
       {
+         if ($prev_line eq "AREAGUESS")
+         {
+            $area = $areaguess;
+            $fbuf[$lineno - 1] = "";
+         }
+         $prev_line = "USLNR";
          $lightcnt++;
          $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
          for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $prev_section[$i]; }
@@ -285,45 +316,68 @@ while (<STDIN>)
          $light{'name'} =~ s/<[\/]?[bi]>//g;
          #if ($light{'name'} =~ /^[\- ]*Rear/) { $light{'front'} = $prev_light{'intnr'}; }
          if ($light{'name'} =~ /Rear/) { $light{'front'} = $prev_light{'intnr'}; }
+         $light{'area'} = $area;
          $next_line = 'NL_NAT';
          next;
       }
    }
 
-   if (!$light{'intnr'} && /^<i>([A-Z] ($NBSP)?[0-9]{4}(\.[0-9]+)?)<\/i>/)
-   {
-      $light{'intnr'} = $1;
-      $next_line = 'NL_NAME' if $namebreak;
-      next;
-   }
-
    # detect section
    if (/(([\-]*)?[^:]*):<br>$/)
    {
+      if ($prev_line eq "AREAGUESS") 
+      { 
+         $area = $areaguess; 
+         $fbuf[$lineno - 1] = "";
+      }
+      $prev_line = "SECTION";
       $section[length $2] = $1;
       for (my $i = 1 + length $2; $i < MAX_SEC_DEPTH; $i++) { undef $section[$i]; }
       next;
    }
 
-   if (!$light{'lon'} && /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br>/)
+   unless ($light{'linecnt'})
    {
-      $light{'lon'} = $1;
-      $light{'lond'} = $2 + $3 / 60.0;
-      if ($4 eq "W") { $light{'lond'} = -$light{'lond'}; }
-      next;
-   }
-
-   if ($charbreak)
-   {
-      if (/^([^(]*\))<br>/)
+      if (!$light{'intnr'} && /^<i>([A-Z] ($NBSP)?[0-9]{4}(\.[0-9]+)?)<\/i>/)
       {
-         $charbreak = 0;
-         $light{'mpos'} .= $1;
+         $prev_line = "INTNR";
+         $light{'intnr'} = $1;
+         $next_line = 'NL_NAME' if $namebreak;
          next;
+      }
+
+      if (!$light{'lon'} && /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br>/)
+      {
+         $prev_line = "LON";
+         $light{'lon'} = $1;
+         $light{'lond'} = $2 + $3 / 60.0;
+         if ($4 eq "W") { $light{'lond'} = -$light{'lond'}; }
+         next;
+      }
+
+      if ($charbreak)
+      {
+         if (/^([^(]*\))<br>/)
+         {
+            $prev_line = "MPOS";
+            $charbreak = 0;
+            $light{'mpos'} .= $1;
+            next;
+         }
       }
    }
 
+   # try to detect area
+   my $a = $_;
+   if ($a =~ /^<b>((&nbsp;|[A-Z -])*)<\/b><br>$/)
+   { 
+      $areaguess = $1; 
+      $prev_line = "AREAGUESS";
+   }
+
+   # if nothing was detected within this pass
    $no_detect = 1;
+   $prev_line = 0 unless $prev_line eq "AREAGUESS";
 }
 
 sub cap_test
@@ -340,7 +394,7 @@ pprogress "\nPASS 2: ";
 $lightcnt = 0;
 for my $lgt (@lbuf)
 {
-   dprint "/********************/\n";
+   dprint "/***** $lgt->{'intnr'} ***************/\n";
 
    pprogress "+" unless $lightcnt % 100;
    $lightcnt++;
@@ -402,12 +456,18 @@ for my $lgt (@lbuf)
                case 'NL_RNGPRT_STRUCT'
                {
                   $next_line = 0;
-                  $fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br>/;
-                  $lgt->{'range'} .= $1;
-                  $lgt->{'struct'} .= $2;
-                  if ($3) { $structbreak = 0; }
-                  else { $structbreak = 1; }
-                  $prev_line = 'PL_RNGPRT_STRUCT';
+                  if ($fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br>/)
+                  {
+                     $lgt->{'range'} .= $1;
+                     $lgt->{'struct'} .= $2;
+                     if ($3) { $structbreak = 0; }
+                     else { $structbreak = 1; }
+                     $prev_line = 'PL_RNGPRT_STRUCT';
+                  }
+                  else
+                  {
+                     $prev_line = 'PL_UNKNOWN';
+                  }
                }
                case 'NL_STRUCT'
                {
@@ -846,8 +906,10 @@ for my $lgt (@lbuf)
 
    my $str = $lgt->{'struct'};
    $str =~ s/$SPACES//g;
-   $str =~ /(stake|withy|tower|lattice|pile|cairn|buoyant|column|post|pillar|conical|can|spherical|spar|barrel|super-boy)/;
-   $lgt->{'shape'} = $1;
+   if ($str =~ /(stake|withy|tower|lattice|pile|cairn|buoyant|column|post|pillar|conical|can|spherical|spar|barrel|super-boy)/)
+   {
+      $lgt->{'shape'} = $1;
+   }
 
    if ($str =~/^($shapecolors)(and($shapecolors))?/i)
    {
@@ -888,9 +950,13 @@ for my $lgt (@lbuf)
    if ($rem =~ /(whistle|horn|siren|diaphone|bell|explosive|gong)/i) { $lgt->{'fsignal'} = lc $1; }
    $lgt->{'rreflect'} = $rem =~ /radar reflector/i ? 1 : 0;
 
-   $lgt->{'mpos'} =~ /^\((.*?)\.?\)$/;
-   $lgt->{'mpos'} = $1;
+   if ($lgt->{'mpos'} =~ /^\((.*?)\.?\)$/) { $lgt->{'mpos'} = $1 if $1; }
 
+   if ($lgt->{'altlight'} =~ /(RACON.*)/)
+   {
+      $lgt->{'racon'} = $1;
+      $lgt->{'altlight'} =~ s/\Q$lgt->{'racon'}\E//;
+   }
    print "LIGHT:\t";
    output_light $lgt;
 
