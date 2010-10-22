@@ -18,6 +18,11 @@ my $char;
 my $group;
 #my $topm;
  
+my $date = `date`;
+chomp $date;
+print "-- File generated at $date.\n-- Use at your own risk.\n\n";
+
+
 if ($pub_nr) { print "DELETE FROM sectors WHERE usl_list='$pub_nr';\nDELETE FROM lights WHERE usl_list='$pub_nr';\n\n"; }
 else { print "DELETE FROM sectors;\nDELETE FROM lights;\n\n"; }
 
@@ -25,7 +30,7 @@ else { print "DELETE FROM sectors;\nDELETE FROM lights;\n\n"; }
 $_ = <STDIN>;
 chomp;
 my @keys = split /\t/, lc;
-print "-- KEYS: @keys\n";
+print "-- KEYS: @keys\n\n";
 
 while (<STDIN>)
 {
@@ -40,7 +45,7 @@ while (<STDIN>)
    foreach (@vals) { $val{"$keys[$i++]"} = $_; }
 
    print "-- LINENO $lcnt:\n";
-   print "INSERT INTO lights VALUES (1,";
+   print "INSERT INTO lights VALUES (1,NULL,";
 
    my $udup = $val{'error'} =~ /usldup/ ? 'a' : '';
    $val{'uslnr'} =~ /([0-9]+)(\.([0-9]+))?/;
@@ -109,7 +114,7 @@ while (<STDIN>)
          if ($2 =~ /unint/) { $vis = "unint"; }
          else { $vis = "int"; }
       }
-      print "   INSERT INTO sectors VALUES ('$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
+      print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
       $loop = 1;
    }
 
@@ -118,7 +123,7 @@ while (<STDIN>)
       $col = $1;
       unless ($coll =~ /$col/)
       {
-         print "   INSERT INTO sectors VALUES ('$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,NULL,NULL,'$col',NULL,'');\n";
+         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,NULL,NULL,'$col',NULL,'');\n";
       }
    }
 
@@ -126,29 +131,36 @@ while (<STDIN>)
    {
       $start= $2 + $4 / 60;
       $end = $6 + $8 / 60;
-      print "-- Intensified\n";
+      #print "-- Intensified\n";
       print "   UPDATE sectors SET sectors.visibility='int',sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
    elsif ($val{'sector'} =~ /Unintensified(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
    {
       $start= $2 + $4 / 60;
       $end = $6 + $8 / 60;
-      print "-- Unintensified\n";
+      #print "-- Unintensified\n";
       print "   UPDATE sectors SET sectors.visibility='unint',sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
-   elsif ($val{'sector'} =~ /Obscured(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
+   elsif ($val{'sector'} =~ /(Obscured|Visible)($intensv)?(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
    {
-      $end = $2 + $4 / 60;
-      $start = $6 + $8 / 60;
-      print "-- Obscured\n";
-      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
-   }
-   elsif ($val{'sector'} =~ /Visible(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
-   {
-      $start= $2 + $4 / 60;
-      $end = $6 + $8 / 60;
-      print "-- Visible\n";
-      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
+      #print "-- PSECTOR: $1 -- $2 -- $3\n";
+      if ($1 eq "Obscured")
+      {
+         $end = $4 + $6 / 60;
+         $start = $8 + $10 / 60;
+      }
+      else
+      {
+         $start = $4 + $6 / 60;
+         $end = $8 + $10 / 60;
+      }
+      my $vis = "";
+      if ($2)
+      {
+         if ($2 =~ /^un/) { $vis = "unint"; }
+         else { $vis = "int"; }
+      }
+      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end,sectors.visibility='$vis' WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
 
    if ($val{'range'} =~ /^[0-9]+$/)
