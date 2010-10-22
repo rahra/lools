@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use feature ":5.10";
 
 #my $pub_nr = shift;
 my $pub_nr = `cat NR`;
@@ -8,6 +9,8 @@ $pub_nr =~ s/[^0-9]//g;
 
 my $lcnt = 1;
 my $colors = "W|R|G|Y|Bu|Or|Vi";
+my $visible = "Visible|Obscured|Intensified|Unintensified";
+my $intensv = '\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\)';
 my @vals;
 my %val;
 
@@ -97,23 +100,57 @@ while (<STDIN>)
    my $start = 0;
    my $end = 0;
 
+   my @defcol = ();
+   while ($val{'character'} =~ /($colors)\./g) { push @defcol, $1; }
+
    # insert all sectors that are found
-   my $intensv = '\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\)';
    if ($val{'sector'} =~ /$intensv/) { print STDERR "$uslnr, $val{'sector'}\n"; }
-   while ($val{'sector'} =~ /($colors)\.?($intensv)?(([0-9]{3,3})°(([0-9]+)′)?)?\-(([0-9]{3,3})°(([0-9]+)′)?)/g)
+   while ($val{'sector'} =~ /($colors|$visible)\.?($intensv)?(([0-9]{3,3})°(([0-9]+)′)?)?\-(([0-9]{3,3})°(([0-9]+)′)?)/g)
    {
       print STDERR " $uslnr 1:$1 2:$2 3:$3 4:$4 5:$5 6:$6 7:$7 8:$8 9:$9 10:$10\n";
-      $col = $1;
-      $coll .= "$1,";
+
       if ($4) { $start = $4 + $6 / 60; }
       else { $start = $end; }
       $end = $8 + $10 / 60;
+
       my $vis = "";
+
+      given ($1)
+      {
+         when ("Obscured")
+         {
+            my $t = $start;
+            $start = $end;
+            $end = $t;
+            $col = $defcol[0];
+         }
+         when ("Visible")
+         {
+            $col = "NULL";
+         }
+         when ("Intensified")
+         {
+            $vis = "int";
+            $col = $defcol[0];
+         }
+         when ("Unintensified")
+         {
+            $vis = "unint";
+            $col = $defcol[0];
+         }
+         default
+         {
+            $col = $1;
+            $coll .= "$1,";
+         }
+      }
+
       if ($2)
       {
          if ($2 =~ /unint/) { $vis = "unint"; }
          else { $vis = "int"; }
       }
+
       print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
       $loop = 1;
    }
@@ -125,42 +162,6 @@ while (<STDIN>)
       {
          print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,NULL,NULL,'$col',NULL,'');\n";
       }
-   }
-
-   if ($val{'sector'} =~ /Intensified(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
-   {
-      $start= $2 + $4 / 60;
-      $end = $6 + $8 / 60;
-      #print "-- Intensified\n";
-      print "   UPDATE sectors SET sectors.visibility='int',sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
-   }
-   elsif ($val{'sector'} =~ /Unintensified(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
-   {
-      $start= $2 + $4 / 60;
-      $end = $6 + $8 / 60;
-      #print "-- Unintensified\n";
-      print "   UPDATE sectors SET sectors.visibility='unint',sectors.start=$start,sectors.end=$end WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
-   }
-   elsif ($val{'sector'} =~ /(Obscured|Visible)($intensv)?(([0-9]{3,3})°(([0-9]+)′)?)\-(([0-9]{3,3})°(([0-9]+)′)?)/)
-   {
-      #print "-- PSECTOR: $1 -- $2 -- $3\n";
-      if ($1 eq "Obscured")
-      {
-         $end = $4 + $6 / 60;
-         $start = $8 + $10 / 60;
-      }
-      else
-      {
-         $start = $4 + $6 / 60;
-         $end = $8 + $10 / 60;
-      }
-      my $vis = "";
-      if ($2)
-      {
-         if ($2 =~ /^un/) { $vis = "unint"; }
-         else { $vis = "int"; }
-      }
-      print "   UPDATE sectors SET sectors.start=$start,sectors.end=$end,sectors.visibility='$vis' WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
 
    if ($val{'range'} =~ /^[0-9]+$/)
