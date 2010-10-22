@@ -284,14 +284,21 @@ while (<STDIN>)
    # detect US NGA number
    if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
    {
-      dprint "MATCH ";
-      if ($7 && ($light{'uslnr'} > $1))
+      my $c = $lineno - $light{'lineno'};
+      # stanzas should have at least 4 lines
+      if ($c < 4)
       {
          $prev_line = 0;
-#         dprint "ILL ($6): $_\n";
+         dprint "MATCHSHORT ($c) '$_'\n";
+      }
+      elsif ($7 && ($light{'uslnr'} > $1))
+      {
+         $prev_line = 0;
+         dprint "MATCHILL ($c) '$_'\n";
       }
       else
       {
+         dprint "MATCH ($c) '$_'\n";
          if ($prev_line eq "AREAGUESS")
          {
             $area = $areaguess;
