@@ -35,7 +35,7 @@ use Switch;
 use constant MAX_SEC_DEPTH => 3;
 
 # enable debug output (1)
-use constant DPRINT => 1;
+my $DPRINT =  shift eq lc "debug" ? 1 : 0;
 
 my $pub_nr;
 my $source;
@@ -84,7 +84,7 @@ my @lbuf = ();
 
 sub pgrs_char
 {
-   return if DPRINT;
+   return if $DPRINT;
    print STDERR "\r$pgrsc[$pgrscnt]";
    $pgrscnt = ($pgrscnt + 1) % @pgrsc;
 }
@@ -99,7 +99,7 @@ sub pprogress
 
 sub dprint
 {
-   print STDERR shift if DPRINT;
+   print STDERR shift if $DPRINT;
 }
 
 
@@ -134,7 +134,7 @@ while (<STDIN>)
 
    # progress output
    pgrs_char unless $lineno % 10;
-   pprogress "   [$lineno]" unless $lineno % 500;
+   pprogress "   [line = $lineno]" unless $lineno % 500;
 
    dprint "$lineno: ($next_line,$prev_line,$structbreak,$charbreak) $_\n";
 
@@ -153,7 +153,7 @@ while (<STDIN>)
       if (/Section 1</)
       {
          $start++;
-         pprogress "\nbeginning at line $lineno\n";
+         pprogress "\nbeginning at line $lineno\n" if $start >= 2;
       }
       next;
    }
@@ -171,6 +171,7 @@ while (<STDIN>)
             if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*)<\/b>)(.*?)<br>/)
             {
                $prev_line = "LAT";
+               NL_NAT:
                $light{'lat'} = $1;
                $light{'latd'} = $2 + $3 / 60.0;
                if ($4 eq "S") { $light{'latd'} = -$light{'latd'}; }
@@ -195,6 +196,13 @@ while (<STDIN>)
                }
                $nxt = 1;
             }
+            # same pattern as above but a little bit weaker
+            # NOTE: pattern should be obsolete
+            #elsif (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*))<br>/)
+            #{
+            #   $prev_line = "LAT_WEAK";
+            #   goto NL_NAT;
+            #}
             elsif (/(0°($NBSP)00.0´)<br>/)
             {
                $prev_line = "LAT0";
@@ -203,6 +211,7 @@ while (<STDIN>)
                $next_line = 'NL_CHAR';
                $nxt = 1;
             }
+            else { dprint "NL_NAT wrong?\n"; }
         }
          case 'NL_CHAR'
          {
@@ -389,14 +398,15 @@ sub cap_test
 }
 
 pprogress "\n$lightcnt lights detected.\n";
-pprogress "\nPASS 2: ";
+pprogress "\nPASS 2:\n";
 
 $lightcnt = 0;
 for my $lgt (@lbuf)
 {
    dprint "/***** $lgt->{'intnr'} ***************/\n";
 
-   pprogress "+" unless $lightcnt % 100;
+   pgrs_char unless $lightcnt % 10;
+   pprogress "   [light = $lightcnt]" unless $lightcnt % 20;
    $lightcnt++;
 
    $structbreak = 0;
@@ -424,12 +434,15 @@ for my $lgt (@lbuf)
       }
  
       # sometimes the name contains RACON
-      if ($fbuf[$i] =~ /^(.*?RACON\.)<br>$/)
+      if ($fbuf[$i] =~ /^(.*?(.?)RACON\.)<br>$/)
       {
-         $lgt->{'name'} .= $1;
-         $fbuf[$i] = "";
-         $prev_line = 'PL_NAME';
-         next;
+         if ($2 ne "-")
+         {
+            $lgt->{'name'} .= $1;
+            $fbuf[$i] = "";
+            $prev_line = 'PL_NAME';
+            next;
+         }
       }
 
       if ($fbuf[$i] =~ /RACON/)
@@ -722,10 +735,10 @@ my $scolcnt = 0;
 
 for my $lgt (@lbuf)
 {
-   dprint "/********************/\n";
+   dprint "/***** $lgt->{'intnr'} ***************/\n";
 
-   #pprogress "+" unless $lightcnt % 100;
-   pgrs_char;
+   pgrs_char unless $lightcnt % 10;
+   pprogress "   [light = $lightcnt]" unless $lightcnt % 20;
    $lightcnt++;
 
    $structbreak = 0;
@@ -966,6 +979,17 @@ for my $lgt (@lbuf)
       $lgt->{'racon'} = $1;
       $lgt->{'altlight'} =~ s/\Q$lgt->{'racon'}\E//;
    }
+
+   # test if racon has ill character
+   if ($lgt->{'name'} =~ /RACON\.$/)
+   {
+      unless ($lgt->{'char'} =~ /^[A-Z0-9]{1,2}\(.*?\)$/)
+      {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'racon_char';
+      }
+   }
+
    print "LIGHT:\t";
    output_light $lgt;
 
