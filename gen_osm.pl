@@ -28,8 +28,19 @@ while (my $ref = $sth->fetchrow_hashref())
    {
       print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
       print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
-      print STDERR "\n";
+      print STDERR " due to position error.\n";
       next;
+   }
+
+   if ($ref->{'name'} =~ /RACON\.$/)
+   {
+      if ($ref->{'character_full'} =~ /^[A-Z0-9]{1,2}\(.*?\)$/)
+      {
+         print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
+         print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
+         print STDERR ", RACON.\n";
+         next;
+      }
    }
 
    $id--;
