@@ -102,7 +102,6 @@ while (<STDIN>)
 
    my @defcol = ();
    while ($val{'character'} =~ /($colors)\./g) { push @defcol, $1; }
-   $coll .= "$defcol[0],";
 
    # insert all sectors that are found
    if ($val{'sector'} =~ /$intensv/) { print STDERR "$uslnr, $val{'sector'}\n"; }
@@ -124,20 +123,24 @@ while (<STDIN>)
             $start = $end;
             $end = $t;
             $col = $defcol[0];
+            $coll .= "$defcol[0],";
          }
          when ("Visible")
          {
             $col = $defcol[0];
+            $coll .= "$defcol[0],";
          }
          when ("Intensified")
          {
             $vis = "int";
             $col = $defcol[0];
+            $coll .= "$defcol[0],";
          }
          when ("Unintensified")
          {
             $vis = "unint";
             $col = $defcol[0];
+            $coll .= "$defcol[0],";
          }
          default
          {
