@@ -102,6 +102,7 @@ while (<STDIN>)
 
    my @defcol = ();
    while ($val{'character'} =~ /($colors)\./g) { push @defcol, $1; }
+   $coll .= "$defcol[0],";
 
    # insert all sectors that are found
    if ($val{'sector'} =~ /$intensv/) { print STDERR "$uslnr, $val{'sector'}\n"; }
@@ -126,7 +127,7 @@ while (<STDIN>)
          }
          when ("Visible")
          {
-            $col = "NULL";
+            $col = $defcol[0];
          }
          when ("Intensified")
          {
@@ -152,7 +153,7 @@ while (<STDIN>)
       }
 
       print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
-      $loop = 1;
+      $loop++;
    }
 
    while ($val{'character'} =~ /($colors)\./g)
