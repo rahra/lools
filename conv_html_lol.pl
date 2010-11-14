@@ -58,7 +58,25 @@ my $prev_line = 0;
 
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
-my %direction = ('N' => 'north', 'E' => 'east', 'S' => 'south', 'W' => 'west');
+my %direction = (
+   'N' => { 'name' => 'north', 'bear' => 0 },
+   'NNE' => { 'name' => 'north north east', 'bear' => 22.5 },
+   'NE' => { 'name' => 'north east', 'bear' => 45 },
+   'ENE' => { 'name' => 'east north east', 'bear' => 67.5 },
+   'E' => { 'name' => 'east', 'bear' => 90 },
+   'ESE' => { 'name' => 'east south east', 'bear' => 112.5 },
+   'SE' => { 'name' => 'south east', 'bear' => 135 },
+   'SSE' => { 'name' => 'south south east', 'bear' => 157.5 },
+   'S' => { 'name' => 'south', 'bear' => 180 },
+   'SSW' => { 'name' => 'south south west', 'bear' => 202.5 },
+   'SW' => { 'name' => 'south west', 'bear' => 225 },
+   'WSW' => { 'name' => 'west south west', 'bear' => 247.5 },
+   'W' => { 'name' => 'west', 'bear' => 270 },
+   'WNW' => { 'name' => 'west north west', 'bear' => 292.5 },
+   'NW' => { 'name' => 'north west', 'bear' => 315 },
+   'NNW' => { 'name' => 'north north west', 'bear' => 337.5 },
+);
+
 my %topmark = (
    'cardinal:north' => '2 cones up',
    'cardinal:east' => '2 cones base together',
@@ -74,7 +92,6 @@ my %topmark = (
 my @section = ();
 my @prev_section = ();
 my %light = ();
-my %prev_light = ();
 
 # buffer containing lines of file
 my @fbuf = ();
@@ -108,11 +125,11 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tAREA\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tDASHES\tNAME\tLONGNAME\tINDNAME\tN_INC\tFRONT\tDIRDIST\tDIR\tLAT\tLON\tLATD\tLOND\tCHARACTER\tALTCHAR\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
+      print "LINENO\tAREA\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tDASHES\tNAME\tLONGNAME\tINDNAME\tN_INC\tFRONT\tREAR\tDIRDIST\tDIR\tLAT\tLON\tLATD\tLOND\tCHARACTER\tALTCHAR\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t\"$l->{'area'}\"\t\"$l->{'section'}\"\t\"$l->{'intnr'}\"\t$pub_nr\t\"$l->{'uslnr'}\"\t$l->{'cat'}\t\"$l->{'dashes'}\"\t\"$l->{'name'}\"\t\"$l->{'longname'}\"\t$l->{'indname'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'dirdist'}\t$l->{'dir'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'altchar'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
+   print "$l->{'lineno'}\t\"$l->{'area'}\"\t\"$l->{'section'}\"\t\"$l->{'intnr'}\"\t$pub_nr\t\"$l->{'uslnr'}\"\t$l->{'cat'}\t\"$l->{'dashes'}\"\t\"$l->{'name'}\"\t\"$l->{'longname'}\"\t$l->{'indname'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'rear'}\t$l->{'dirdist'}\t$l->{'dir'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'altchar'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
 }
 
 
@@ -322,7 +339,6 @@ while (<STDIN>)
          $charbreak = 0;
          $next_line = 0;
 
-         %prev_light = %light;
          %light = ();
 
          # check if name is line-breaked
@@ -332,8 +348,11 @@ while (<STDIN>)
          $light{'cat'} = $6;
          $light{'name'} = $4;
          $light{'name'} =~ s/<[\/]?[bi]>//g;
-         #if ($light{'name'} =~ /^[\- ]*Rear/) { $light{'front'} = $prev_light{'intnr'}; }
-         if ($light{'name'} =~ /Rear/) { $light{'front'} = $prev_light{'intnr'}; }
+         if ($light{'name'} =~ /Rear/)
+         {
+            $light{'front'} = $lbuf[@lbuf - 1]->{'intnr'};
+            $lbuf[@lbuf - 1]->{'rear'} = $light{'uslnr'};
+         }
          $light{'area'} = $area;
          $next_line = 'NL_NAT';
          next;
@@ -802,7 +821,7 @@ for my $lgt (@lbuf)
    if ($str =~ /([nesw])\.cardinal/i)
    {
       dprint "cardinal: $1\n";
-      $lgt->{'type'} = 'cardinal:' . $direction{"$1"};
+      $lgt->{'type'} = 'cardinal:' . $direction{"$1"}->{'name'};
    }
    elsif ($str =~ /isolated/i) { $lgt->{'type'} = 'isolated_danger';}
    elsif ($str =~ /safewater/i) { $lgt->{'type'} = 'safe_water'; }
@@ -1017,7 +1036,7 @@ for my $lgt (@lbuf)
       elsif ($lgt->{'name'} =~ m/\b([NESW]+)\b/)
       {
          dprint "REARMGK 1:$1\n";
-         $lgt->{'dir'} = $1;
+         $lgt->{'dir'} = $direction{$1}->{'bear'};
       }
 
       if ($lgt->{'name'} =~ m/\b([0-9][0-9.,]*)\b([^°′'].*)/)

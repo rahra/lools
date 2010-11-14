@@ -85,6 +85,14 @@ while (my $ref = $sth->fetchrow_hashref())
    {
       print "      <tag k='seamark:light:category' v='$ref->{'pos'}' />\n";
    }
+   elsif ($ref->{'leading'} eq 'front')
+   {
+      print "      <tag k='seamark:light:category' v='leading;lower' />\n";
+   }
+   elsif ($ref->{'leading'} eq 'rear')
+   {
+      print "      <tag k='seamark:light:category' v='leading;upper' />\n";
+   }
    if ($ref->{'sequence'})
    {
       print "      <tag k='seamark:light:sequence' v='$ref->{'sequence'}' />\n";
