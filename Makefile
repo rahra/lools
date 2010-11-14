@@ -15,14 +15,21 @@ all:
 		make -C $$nr ; \
 		done
 
+bz2:
+	for nr in $(PUB) ; do \
+		make -C $$nr bz2 ; \
+		done
+
+:
+
 clean:
 	for nr in $(PUB) ; do \
-		make -C $$nr clean NR=$$nr ; \
+		make -C $$nr clean ; \
 		done
 
 cleancsv:
 	for nr in $(PUB) ; do \
-		make -C $$nr cleancsv NR=$$nr ; \
+		make -C $$nr cleancsv ; \
 		done
 
 cleanall:
@@ -30,5 +37,5 @@ cleanall:
 		rm -rf $$nr ; \
 		done
 
-.PHONY: clean cleanall
+.PHONY: clean cleancsv cleanall bz2
 

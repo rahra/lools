@@ -49,7 +49,7 @@ while (my $ref = $sth->fetchrow_hashref())
    # FIXME: where to put the name of a light?
    $ref->{'name'} =~ s/'/&apos;/g;
    $ref->{'name'} =~ s/<.*?>//g;
-   print "      <tag k='name' v='$ref->{'name'}' />\n";
+   print "      <tag k='seamark:name' v='$ref->{'name'}' />\n";
 #   $ref->{'name_comb'} =~ s/'/&apos;/g;
 #   print "      <tag k='loc_name' v='$ref->{'name'}' />\n";
 
