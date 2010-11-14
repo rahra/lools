@@ -40,6 +40,7 @@ while (<STDIN>)
    $lcnt++;
    chomp;
    s/'/\\'/g;
+   s/"//g;
    @vals = split /\t/;
 
    # convert value array to hash
@@ -51,19 +52,25 @@ while (<STDIN>)
    print "INSERT INTO lights VALUES (1,NULL,";
 
    my $udup = $val{'error'} =~ /usldup/ ? 'a' : '';
-   $val{'uslnr'} =~ /([0-9]+)(\.([0-9]+))?/;
-   $uslnr = $1;
-   $uslsubnr = $3 . $udup;
-   #$uslsubnr = '' unless $3;
+
+   undef $uslnr;
+   undef $uslsubnr;
+   if ($val{'uslnr'} =~ /([0-9]+)(\.([0-9]+))?/)
+   {
+      $uslnr = $1;
+      $uslsubnr = $3 . $udup;
+   }
 
    my $idup = $val{'error'} =~ /intdup/ ? 'a' : '';
-   $val{'intnr'} =~ s/ //g;
+   #$val{'intnr'} =~ s/"//g;
    if ($val{'intnr'})
    {
-      $val{'intnr'} =~ /^([A-Z])([0-9]+)(\.([0-9]+))?/;
-      $intsubnr = $4 . $idup;
-      #$intsubnr = '' unless $4;
-      print "'$1','$2','$intsubnr',";
+      undef $intsubnr;
+      if ($val{'intnr'} =~ /^([A-Z]?)([0-9]+)(\.([0-9]+))?/)
+      {
+         $intsubnr = $4 . $idup;
+         print "'$1','$2','$intsubnr',";
+      }
    }
    else
    {
@@ -78,19 +85,26 @@ while (<STDIN>)
    $val{'height_ft'} = 0 if $val{'height_ft'} eq "N/A";
    $val{'latd'} = 0.0 unless $val{'latd'};
    $val{'lond'} = 0.0 unless $val{'lond'};
+   $val{'dir'} = 'NULL' unless $val{'dir'};
+   $val{'dirdist'} = 'NULL' unless $val{'dirdist'};
 
-   $val{'mult_pos'} =~ /\((horiz|vert)\.\)/;
-   my $mpos = $1;
+   undef $char;
+   undef $group;
+   if ($val{'character'} =~ /^([0-9] ?)?(Dir\.)?(F|L.Fl|Al.Fl|Fl|Iso|Oc|V.Q|U.Q|Q|Mo)\.(\((.*?)\))?/)
+   {
+      $char = $3;
+      $group = $5;
+      $group = 1 unless $5;
+   }
 
-   $val{'character'} =~ /^([0-9] ?)?(Dir\.)?(F|L.Fl|Al.Fl|Fl|Iso|Oc|V.Q|U.Q|Q|Mo)\.(\((.*?)\))?/;
-   $char = $3;
-   $group = $5;
-   $group = 1 unless $5;
+   my $leading = 'NULL';
+   $leading = "'front'" if $val{'front'};
+   $leading = "'rear'" if $val{'rear'};
 
    my $fsignal = $val{'fsignal'} ? "'$val{'fsignal'}'" : 'NULL';
 
    #$topm = $val{'topmark'} ? 1 : 0;
-   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$mpos',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'remark'}'";
+   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$val{'mult_pos'}',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'remark'}',$val{'dir'},$val{'dirdist'},$leading";
 
    print ");\n";
 
@@ -164,7 +178,8 @@ while (<STDIN>)
       $col = $1;
       unless ($coll =~ /$col/)
       {
-         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,NULL,NULL,'$col',NULL,'');\n";
+         print "   -- leading rear\n" if $val{'dir'} ne 'NULL';
+         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$val{'dir'},$val{'dir'},'$col',NULL,'');\n";
       }
    }
 
