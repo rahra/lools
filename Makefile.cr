@@ -9,7 +9,7 @@ TARGET=Pub$(NR)bk
 LOGFILE=lol.log
 BINPATH=..
 
-all: $(TARGET).osm.bz2
+all: $(TARGET).osm
 
 $(TARGET).html: $(TARGET).pdf
 	pdftohtml -i -noframes $(TARGET).pdf > /dev/null 2>> $(LOGFILE)
@@ -37,11 +37,16 @@ $(TARGET).osm: $(TARGET).mysql
 $(TARGET).osm.bz2: $(TARGET).osm
 	bzip2 -c $(TARGET).osm > $(TARGET).osm.bz2
 
+$(TARGET).csv.bz2: $(TARGET).csv
+	bzip2 -c $(TARGET).csv > $(TARGET).csv.bz2
+
+bz2: $(TARGET).osm.bz2 $(TARGET).csv.bz2
+	
 clean:
 	rm -f $(TARGET).html $(TARGET)_.html $(TARGET).csv $(TARGET)_.csv $(TARGET).sql $(TARGET).mysql $(TARGET).osm $(TARGET).osm.bz2 NR
 
 cleancsv:
 	rm -f $(TARGET)_.csv
 
-.PHONY: clean
+.PHONY: clean cleancsv bz2
 
