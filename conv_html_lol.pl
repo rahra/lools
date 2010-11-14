@@ -108,15 +108,15 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tAREA\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tNAME\tN_INC\tFRONT\tDIRDIST\tDIR\tLAT\tLON\tLATD\tLOND\tCHARACTER\tALTCHAR\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
+      print "LINENO\tAREA\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tDASHES\tNAME\tLONGNAME\tINDNAME\tN_INC\tFRONT\tDIRDIST\tDIR\tLAT\tLON\tLATD\tLOND\tCHARACTER\tALTCHAR\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
       return;
    }
 
-   print "$l->{'lineno'}\t$l->{'area'}\t$l->{'section'}\t$l->{'intnr'}\t$pub_nr\t$l->{'uslnr'}\t$l->{'cat'}\t$l->{'name'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'dirdist'}\t$l->{'dir'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'altchar'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
+   print "$l->{'lineno'}\t\"$l->{'area'}\"\t\"$l->{'section'}\"\t\"$l->{'intnr'}\"\t$pub_nr\t\"$l->{'uslnr'}\"\t$l->{'cat'}\t\"$l->{'dashes'}\"\t\"$l->{'name'}\"\t\"$l->{'longname'}\"\t$l->{'indname'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'dirdist'}\t$l->{'dir'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'altchar'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
 }
 
 
-pprogress "PASS 1:\n";
+pprogress "----- PASS 1 -----\n";
 my $no_detect = 0;
 my $start = 0;
 my $areaguess;
@@ -276,6 +276,7 @@ while (<STDIN>)
    {
       $light{'linecnt'} = $lineno - $light{'lineno'} unless $light{'linecnt'};
       for (my $i = 0; $i < MAX_SEC_DEPTH; $i++) { $light{'section'} .= $prev_section[$i]; }
+      $lightcnt++;
       push @lbuf, {%light};
       pprogress "\nend at $lineno\n";
       last;
@@ -407,7 +408,7 @@ sub cap_test
 }
 
 pprogress "\n$lightcnt lights detected.\n";
-pprogress "\nPASS 2:\n";
+pprogress "\n----- PASS 2 -----\n";
 
 $lightcnt = 0;
 for my $lgt (@lbuf)
@@ -735,7 +736,7 @@ for my $lgt (@lbuf)
 }
 
 pprogress "\n$lightcnt lights processed.\n";
-pprogress "\nPASS 3:\n";
+pprogress "\n----- PASS 3 -----\n";
 $lightcnt = 0;
 
 my %lightnr;
@@ -999,26 +1000,60 @@ for my $lgt (@lbuf)
       }
    }
 
+   # Clean name field.
+   $lgt->{'name'} =~ s/$NBSP/ /g;
+   $lgt->{'name'} =~ s/ [ ]+/ /g;
+
    # FIXME: this detection is not completely finished
    # detect front/rear detail
-   if ($lgt->{'name'} =~ /Rear,(.*?([0-9,.]+)($SPACES)(.*?))?([0-9]{3})°([0-9]+)?/)
+   #if ($lgt->{'name'} =~ /Rear,(.*?([0-9,.]+)($SPACES)(.*?))?([0-9]{3})°([0-9]+)?/)
+   if ($lgt->{'front'})
    {
-      $lgt->{'dir'} = $5 + $6 / 60.0;
-      $lgt->{'dirdist'} = $2;
-      unless ($4 =~ 'meters') { $lgt->{'dirdist'} = $2 * 1000; }
+      dprint "REAR: \"$lgt->{'name'}\"\n";
+      if ($lgt->{'name'} =~ m/([0-9.]{3,})°([0-9]*)/)
+      {
+         $lgt->{'dir'} = $1 + $2 / 60.0;
+      }
+      elsif ($lgt->{'name'} =~ m/\b([NESW]+)\b/)
+      {
+         dprint "REARMGK 1:$1\n";
+         $lgt->{'dir'} = $1;
+      }
+
+      if ($lgt->{'name'} =~ m/\b([0-9][0-9.,]*)\b([^°′'].*)/)
+      {
+         my $rd = $1;
+         dprint "REARDIST 1:$1 2:$2\n";
+
+         #unless ($2 =~ /^°/)
+         {
+            $lgt->{'dirdist'} = $rd;
+            $lgt->{'dirdist'} =~ s/,//g;
+
+            dprint "REARDISTSET $1,$lgt->{'dirdist'}\n";
+
+            if ($lgt->{'name'} =~ /\bkm\b/)
+            {
+               $lgt->{'dirdist'} *= 1000;
+            }
+            elsif ($lgt->{'name'} =~ /\bkilom/)
+            {
+               $lgt->{'dirdist'} *= 1000;
+            }
+            elsif ($lgt->{'name'} =~ /\bmile/)
+            {
+               $lgt->{'dirdist'} *= 1852;
+            }
+         }
+      }
    }
-
-   #print "LIGHT:\t";
-   #output_light $lgt;
-
 }
 
-pprogress "\n$lightcnt lights processed.\n";
-pprogress "$scolcnt shape colors found.\n";
+pprogress "\n$lightcnt lights processed.\n$scolcnt shape colors found.\n";
 
-pprogress "\nPASS 4: ";
-pprogress "\ncontinue reading HTML, parsing index.\n";
+pprogress "\n----- PASS 4 -----\ncontinue reading HTML, parsing index.\n";
 
+# This pass reads and parses the index into a separate data structure.
 
 my $is_ind = 0;
 my %ilgt;
@@ -1026,6 +1061,7 @@ my $uslcnt = 0;
 my $intcnt = 0;
 my $unmatch = 0;
 my $linebuf;
+my $otxt;
 
 while (<STDIN>)
 {
@@ -1033,33 +1069,38 @@ while (<STDIN>)
    pgrs_char unless $lineno % 100;
    pprogress "   [line = $lineno]" unless $lineno % 500;
 
-   # find beginning of index
+   # Find beginning of index.
    if ($is_ind < 1)
    {
       if (/INDEX – LIGHTS/)
       {
          $is_ind = 1;
-         pprogress "\nlights index at line $lineno\n";
+         $otxt = "                   lights $lineno";
+         pprogress $otxt;
       }
       next;
    }
 
+   # Find beginning of radio beacons (those are ignored yet).
    if ($is_ind < 2)
    {
       if (/RADIOBEACONS/)
       {
          $is_ind = 2;
-         pprogress "\nradio beacons at line $lineno\n";
+         $otxt .= ", radio beacons $lineno";
+         pprogress $otxt;
          next;
       }
    }
 
+   # Find beginning of cross reference.
    if ($is_ind < 3)
    {
       if (m/CROSS REFERENCE/)
       {
          $is_ind = 3;
-         pprogress "\ncross reference at line $lineno\n";
+         $otxt .= ", cross ref $lineno";
+         pprogress $otxt;
          next;
       }
    }
@@ -1067,8 +1108,6 @@ while (<STDIN>)
    chomp;
    s/&nbsp;/ /g;
    s/ [ ]+/ /g;
-
-   #print "\"$_\"\n";
 
    if ($is_ind == 1)
    {
@@ -1093,29 +1132,14 @@ while (<STDIN>)
          {
             for (my $i = 0; $i < @uslnr; $i++)
             {
+               # Detect and list duplicate USL#.
                my $uslnrd = $uslnr[$i];
-
-               ## detect duplicates
-               #if ($ilgt{$uslnrd})
-               #{
-               #   $ilgt{$uslnrd}->{'dup'} = $uslnr[$i];
-               #   for (my $j = 1; ; $j++)
-               #   {
-               #      $uslnrd = $uslnr[$i] . "-" . $j;
-               #      unless ($ilgt{$uslnrd})
-               #      {
-               #         $ilgt{$uslnrd}->{'dup'} = $uslnr[$i];
-               #         last;
-               #      }
-               #   }
-               #}
-
                if ($ilgt{$uslnrd})
                {
                   $ilgt{$uslnrd}->{'dup'} = $uslnr[$i];
                   $ilgt{$uslnrd}->{'lineno'} .= "," . $lineno;
 
-                  # if name is section name (upper case) then prepend it
+                  # If name is section name (upper case) then prepend it
                   # otherwise append it (the latter case may not always be
                   # correct.).
                   if ($name =~ /^[A-Z ()-]+$/)
@@ -1136,7 +1160,6 @@ while (<STDIN>)
                $uslcnt++;
             }
          }
-         #else { print "E\n"; }
          next;
       }
 
@@ -1198,78 +1221,101 @@ while (<STDIN>)
 
 }
 
-my $totcnt = 0;
+pprogress "\nuslcnt = $uslcnt\nintcnt = $intcnt\nunmatch = $unmatch\n";
 
-#for my $i (keys %ilgt)
-#{
-#   $totcnt++;
-#   print "[$ilgt{$i}->{'lineno'}]\t$ilgt{$i}->{'uslnr'}\t";
-#   if ($ilgt{$i}->{'intnr'}) { print "$ilgt{$i}->{'intnr'}"; }
-#   print "\t\"$ilgt{$i}->{'name'}\"";
-#   print "\t$i\t(DUP)" if $ilgt{$i}->{'dup'};
-#   print "\n";
-#}
+pprogress "\n----- PASS 5 -----\nmatch index to lights\n";
 
-pprogress "\nuslcnt = $uslcnt\nintcnt = $intcnt\nunmatch = $unmatch\ntotal count = $totcnt\n";
+# This run tries to compares the index of the LoL to the lights stanzas. It
+# Further creates the full name of light by checking leading dashes.
 
-pprogress "PASS 5:\n";
-pprogress "match index to lights\n";
+$lightcnt = 0;
+$unmatch = 0;
+
+my @combname;
+my $sec;
 
 for my $lgt (@lbuf)
 {
+   $lightcnt++;
+   pgrs_char unless $lightcnt % 10;
+   pprogress "   [light = $lightcnt]" unless $lightcnt % 100;
+
+   if ($lgt->{'section'} ne $sec)
+   {
+      undef @combname;
+      $sec = $lgt->{'section'};
+   }
+
+   if ($lgt->{'name'} =~ m/^([ -]*)(.*)$/)
+   {
+      $lgt->{'name'} = $2;
+      $lgt->{'dashes'} = $1;
+      $lgt->{'dashes'} =~ s/[^-]//g;
+      @combname[length $lgt->{'dashes'}] = $lgt->{'name'};
+      for (my $i = 1 + length $lgt->{'dashes'}; $i < @combname; $i++)
+      {
+         undef $combname[$i];
+      }
+      for (my $i = 0; $i < @combname; $i++)
+      {
+         $lgt->{'longname'} .= ' ' if $i && $lgt->{'longname'};
+         $lgt->{'longname'} .= $combname[$i];
+      }
+   }
+   else
+   {
+      pprogress "NOMATCH\n";
+   }
+
+   # Test if there is an entry for a specific light in the index.
    unless ($ilgt{$lgt->{'uslnr'}})
    {
+      # Append error 'noindex' if an entry is missing in the index.
       $lgt->{'error'} .= ',' if $lgt->{'error'};
       $lgt->{'error'} .= 'noindex';
+      $unmatch++;
       next;
    }
+
    $lgt->{'indname'} = $ilgt{$lgt->{'uslnr'}}->{'name'};
 
+   # If a light has an intt'l number test if it matches the entry in the index.
    if ($lgt->{'intnr'})
    {
       unless ($ilgt{$lgt->{'uslnr'}}->{'intnr'} =~ /\Q$lgt->{'intnr'}\E/)
       {
+         # Append error 'illintmatch()' if light stanza contains different
+         # intt'l number than the index.
          $lgt->{'error'} .= ',' if $lgt->{'error'};
          $lgt->{'error'} .= "illintmatch($ilgt{$lgt->{'uslnr'}}->{'intnr'})";
+         $unmatch++;
       }
    }
    elsif ($ilgt{$lgt->{'uslnr'}}->{'intnr'})
    {
-         $lgt->{'intnr'} = $ilgt{$lgt->{'uslnr'}}->{'intnr'};
-         $lgt->{'error'} .= ',' if $lgt->{'error'};
-         $lgt->{'error'} .= 'intset';
+      # If light has no int'l number but the index has one, copy the number
+      # from the index to the light and append the error 'intset' to the light.
+      $lgt->{'intnr'} = $ilgt{$lgt->{'uslnr'}}->{'intnr'};
+      $lgt->{'error'} .= ',' if $lgt->{'error'};
+      $lgt->{'error'} .= 'intset';
+      $unmatch++;
    }
-
-#   my $pat = $lgt->{'intnr'};
-#   $pat = "XXX" unless length $pat;
-#   unless ($ilgt{$lgt->{'uslnr'}}->{'intnr'} =~ /\Q$pat\E/)
-#   {
-#      unless ((length $lgt->{'intnr'} == 0) && (length $ilgt{$lgt->{'uslnr'}}->{'intnr'} == 0))
-#      {
-#         print STDERR $lgt->{'intnr'} .":". $ilgt{$lgt->{'uslnr'}}->{'intnr'} . "\n";
-#         output_light $lgt;
-#      }
-#   }
 }
 
+pprogress "\n$lightcnt lights processed.\n$unmatch lights did not match.";
 
-pprogress "\nFIN:\ngenerating output...\n";
+pprogress "\n\n----- PASS 6 -----\ngenerating output...\n";
+$lightcnt = 0;
 
 for my $lgt (@lbuf)
 {
+   $lightcnt++;
+   pgrs_char unless $lightcnt % 10;
+   pprogress "   [light = $lightcnt]" unless $lightcnt % 100;
+
    print "LIGHT:\t";
    output_light $lgt;
 }
 
-#pprogress "\nPASS 4: ";
-#$lightcnt = 0;
-#
-#for my $lgt (@lbuf)
-#{
-#   pgrs_char;
-#
-#   print "LIGHT:\t";
-#   output_light $lgt;
-#}
-
+pprogress "\n$lightcnt lights processed.\n";
 
