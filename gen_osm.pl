@@ -46,12 +46,15 @@ while (my $ref = $sth->fetchrow_hashref())
    $id--;
    print "   <node id='$id' action='modify' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
 
-   # FIXME: where to put the name of a light?
    $ref->{'name'} =~ s/'/&apos;/g;
    $ref->{'name'} =~ s/<.*?>//g;
    print "      <tag k='seamark:name' v='$ref->{'name'}' />\n";
-#   $ref->{'name_comb'} =~ s/'/&apos;/g;
-#   print "      <tag k='loc_name' v='$ref->{'name'}' />\n";
+   if ($ref->{'longname'} ne $ref->{'name'})
+   {
+      $ref->{'longname'} =~ s/'/&apos;/g;
+      $ref->{'longname'} =~ s/<.*?>//g;
+      print "      <tag k='seamark:longname' v='$ref->{'longname'}' />\n";
+   }
 
    $ref->{'int_chr'} = "USNGA" if $ref->{'int_chr'} eq 'u';
    my $intnr;

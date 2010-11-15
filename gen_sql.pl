@@ -85,8 +85,8 @@ while (<STDIN>)
    $val{'height_ft'} = 0 if $val{'height_ft'} eq "N/A";
    $val{'latd'} = 0.0 unless $val{'latd'};
    $val{'lond'} = 0.0 unless $val{'lond'};
-   $val{'dir'} = 'NULL' unless $val{'dir'};
-   $val{'dirdist'} = 'NULL' unless $val{'dirdist'};
+   $val{'dir'} = 'NULL' if $val{'dir'} eq "";
+   $val{'dirdist'} = 'NULL' if $val{'dirdist'} eq "";
 
    undef $char;
    undef $group;
@@ -98,8 +98,8 @@ while (<STDIN>)
    }
 
    my $leading = 'NULL';
-   $leading = "'front'" if $val{'front'};
-   $leading = "'rear'" if $val{'rear'};
+   $leading = "'front'" if $val{'rear'};
+   $leading = "'rear'" if $val{'front'};
 
    my $fsignal = $val{'fsignal'} ? "'$val{'fsignal'}'" : 'NULL';
 
@@ -173,13 +173,18 @@ while (<STDIN>)
       $loop++;
    }
 
-   while ($val{'character'} =~ /($colors)\./g)
+   foreach my $c (@defcol)
    {
-      $col = $1;
-      unless ($coll =~ /$col/)
+      if ($val{'dir'} ne "NULL")
       {
-         print "   -- leading rear\n" if $val{'dir'} ne 'NULL';
-         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$val{'dir'},$val{'dir'},'$col',NULL,'');\n";
+         print "   -- leading rear \"$val{'dir'}\"\n";
+         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$val{'dir'},$val{'dir'},'$c',NULL,'');\n";
+         next;
+      }
+
+      unless ($coll =~ /$c/)
+      {
+         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,NULL,NULL,'$c',NULL,'');\n";
       }
    }
 

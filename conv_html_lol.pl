@@ -348,7 +348,7 @@ while (<STDIN>)
          $light{'cat'} = $6;
          $light{'name'} = $4;
          $light{'name'} =~ s/<[\/]?[bi]>//g;
-         if ($light{'name'} =~ /Rear/)
+         if ($light{'name'} =~ /\brear\b/i)
          {
             $light{'front'} = $lbuf[@lbuf - 1]->{'intnr'};
             $lbuf[@lbuf - 1]->{'rear'} = $light{'uslnr'};
@@ -1331,6 +1331,12 @@ for my $lgt (@lbuf)
    $lightcnt++;
    pgrs_char unless $lightcnt % 10;
    pprogress "   [light = $lightcnt]" unless $lightcnt % 100;
+
+   # Clean longname field.
+   $lgt->{'longname'} =~ s/$NBSP/ /g;
+   $lgt->{'longname'} =~ s/ [ ]+/ /g;
+   $lgt->{'longname'} =~ s/^ +//g;
+   $lgt->{'longname'} =~ s/ +$//g;
 
    print "LIGHT:\t";
    output_light $lgt;
