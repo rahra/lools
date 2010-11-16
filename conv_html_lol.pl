@@ -732,7 +732,7 @@ for my $lgt (@lbuf)
             {
                $lgt->{'range'} = $1;
                $fbuf[$i] = "";
-               $prev_line = 'PL_RANGE';
+               $prev_line = 'PL_RANGE1';
                next;
             }
          }
