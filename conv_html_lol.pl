@@ -482,285 +482,294 @@ for my $lgt (@lbuf)
          next;
       }
 
-         # detect second light
-         # FIXME: pattern does not work
-         if ($fbuf[$i] =~ /^<b>((Dir\.)?(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\.[^<]*)<\/b><br>/)
+      # detect second light
+      # FIXME: pattern does not work
+      if ($fbuf[$i] =~ /^<b>((Dir\.)?(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\.[^<]*)<\/b><br>/)
+      {
+         unless ($lgt->{'char'}) 
+         { 
+            $lgt->{'char'} = $1; 
+            $prev_line = 'PL_CHAR';
+         }
+         else 
+         { 
+            $lgt->{'altlight'} = $fbuf[$i];
+            $prev_line = 'PL_ALTLGT';
+         }
+         $fbuf[$i] = "";
+         next;
+      }
+
+      if ($next_line)
+      {
+         switch ($next_line)
          {
-            unless ($lgt->{'char'}) 
-            { 
-               $lgt->{'char'} = $1; 
-               $prev_line = 'PL_CHAR';
+            case 'NL_RNGPRT_STRUCT'
+            {
+               $next_line = 0;
+               if ($fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br>/)
+               {
+                  $lgt->{'range'} .= $1;
+                  $lgt->{'struct'} .= $2;
+                  if ($3) { $structbreak = 0; }
+                  else { $structbreak = 1; }
+                  $prev_line = 'PL_RNGPRT_STRUCT';
+               }
+               else
+               {
+                  $prev_line = 'PL_UNKNOWN';
+               }
             }
-            else 
-            { 
-               $lgt->{'altlight'} = $1; 
-               $prev_line = 'PL_ALTLGT';
+            case 'NL_STRUCT'
+            {
+               $next_line = 0;
+               # this line might be a color range
+               if ($fbuf[$i] =~ /^(($COLORS)\.)<br>/)
+               {
+                  $lgt->{'range'} .= ',' if $lgt->{'range'};
+                  $lgt->{'range'} .= $1;
+                  $prev_line = 'PL_RANGE_PART';
+                  $next_line = 'NL_RNGPRT_STRUCT';
+               }
+               elsif ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
+               {
+                  $lgt->{'range'} .= "," if $lgt->{'range'};
+                  $lgt->{'range'} .= "$1. $4";
+                  $prev_line = 'PL_RANGE';
+               }
+               else
+               {
+                  $fbuf[$i] =~ /^(.*?(\.)?)<br>$/;
+                  $lgt->{'struct'} .= " " . $1;
+                  $structbreak = 0 if $2;
+                  $prev_line = 'PL_STRUCT';
+               }
             }
+            case 'NL_CRNG'
+            {
+               $next_line = 0;
+               if ($fbuf[$i] =~ /^([0-9]+)<br>/)
+               {
+                  $lgt->{'range'} .= $1;
+                  $prev_line = 'PL_CRNG';
+               }
+               elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)<br>/)
+               {
+                  $lgt->{'range'} .= $1;
+                  $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+                  $lgt->{'struct'} .= $3;
+                  if ($4) { $structbreak = 0; }
+                  else { $structbreak = 1; }
+                  $prev_line = 'PL_STRUCT';
+               }
+            }
+         }
+         $fbuf[$i] = "";
+         next;
+      } # if ($next_line)
+
+      unless ($lgt->{'height_ft'})
+      {
+         if ($fbuf[$i] =~ /^([0-9]+)<br>$/)
+         {
+            $lgt->{'height_ft'} = $1;
             $fbuf[$i] = "";
+            $prev_line = 'PL_HEIGHT_FT';
             next;
          }
-
-         if ($next_line)
-         {
-            switch ($next_line)
-            {
-               case 'NL_RNGPRT_STRUCT'
-               {
-                  $next_line = 0;
-                  if ($fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br>/)
-                  {
-                     $lgt->{'range'} .= $1;
-                     $lgt->{'struct'} .= $2;
-                     if ($3) { $structbreak = 0; }
-                     else { $structbreak = 1; }
-                     $prev_line = 'PL_RNGPRT_STRUCT';
-                  }
-                  else
-                  {
-                     $prev_line = 'PL_UNKNOWN';
-                  }
-               }
-               case 'NL_STRUCT'
-               {
-                  $next_line = 0;
-                  # this line might be a color range
-                  if ($fbuf[$i] =~ /^(($COLORS)\.)<br>/)
-                  {
-                     $lgt->{'range'} .= ',' if $lgt->{'range'};
-                     $lgt->{'range'} .= $1;
-                     $prev_line = 'PL_RANGE_PART';
-                     $next_line = 'NL_RNGPRT_STRUCT';
-                  }
-                  elsif ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
-                  {
-                     $lgt->{'range'} .= "," if $lgt->{'range'};
-                     $lgt->{'range'} .= "$1. $4";
-                     $prev_line = 'PL_RANGE';
-                  }
-                  else
-                  {
-                     $fbuf[$i] =~ /^(.*?(\.)?)<br>$/;
-                     $lgt->{'struct'} .= " " . $1;
-                     $structbreak = 0 if $2;
-                     $prev_line = 'PL_STRUCT';
-                  }
-               }
-               case 'NL_CRNG'
-               {
-                  $next_line = 0;
-                  if ($fbuf[$i] =~ /^([0-9]+)<br>/)
-                  {
-                     $lgt->{'range'} .= $1;
-                     $prev_line = 'PL_CRNG';
-                  }
-                  elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)<br>/)
-                  {
-                     $lgt->{'range'} .= $1;
-                     $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-                     $lgt->{'struct'} .= $3;
-                     if ($4) { $structbreak = 0; }
-                     else { $structbreak = 1; }
-                     $prev_line = 'PL_STRUCT';
-                  }
-               }
-            }
-            $fbuf[$i] = "";
-            next;
-         }
-
-         unless ($lgt->{'height_ft'})
-         {
-            if ($fbuf[$i] =~ /^([0-9]+)<br>$/)
-            {
-               $lgt->{'height_ft'} = $1;
-               $fbuf[$i] = "";
-               $prev_line = 'PL_HEIGHT_FT';
-               next;
-            }
 # I commented this out again. Unfortunately I cannot remember
 # what exactly the reason for this was.
-#            else
-#            {
-#               $lgt->{'height_ft'} = "N/A";
-#            }
-         }
+#         else
+#         {
+#            $lgt->{'height_ft'} = "N/A";
+#         }
+      }
 
-         if ($fbuf[$i] =~ /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))<br>/)
+      if ($fbuf[$i] =~ /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))<br>/)
+      {
+         unless ($lgt->{'lat'})
          {
-            unless ($lgt->{'lat'})
-            {
-               $lgt->{'lat'} = $1;
-               $lgt->{'latd'} = $2 + $3 / 60.0;
-               if ($4 eq "S") { $lgt->{'latd'} = -$lgt->{'latd'}; }
-               $fbuf[$i] = "";
-               $prev_line = 'PL_LAT';
-               next;
-            }
-         }
-
-         if ($fbuf[$i] =~ /(0°($NBSP)00.0´)<br>/)
-         {
-            unless ($lgt->{'lat'})
-            {
-               $lgt->{'lat'} = $1;
-               $lgt->{'latd'} = 0.0;
-               $fbuf[$i] = "";
-               $prev_line = 'PL_LAT';
-               next;
-            }
-            unless ($lgt->{'lon'})
-            {
-               $lgt->{'lon'} = $1;
-               $lgt->{'lond'} = 0.0;
-               $fbuf[$i] = "";
-               $prev_line = 'PL_LON';
-               next;
-            }
-         }
-
-         if ($fbuf[$i] =~ /^(($COLORS)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?([^<]*?(\.)?)<br>/)
-         {
-            #$lgt->{'range'} .= ',' if $lgt->{'range'};
-            if ($lgt->{'range'})
-            {
-               unless (substr($lgt->{'range'}, length $lgt->{'range'} - 1, 1) eq ".")
-               {
-                  $lgt->{'range'} .= ',';
-               }
-            }
-            $lgt->{'range'} .= $1 . $4;
-            $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-            $lgt->{'struct'} .= $6;
-            $structbreak = 1 unless $7;
-            $prev_line = 'PL_STRUCT';
-
-            if ($lgt->{'struct'} =~ /^(.*?[^A-Z]\.)(.*)$/)
-            {
-               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-               $lgt->{'struct'} = $1;
-               $lgt->{'rem'} = $2;
-            }
-
-            if (cap_test $lgt->{'struct'})
-            {
-               $structbreak = 1;
-            }
-            elsif ($lgt->{'struct'} =~ /^(.*?(\.)?)$NBSP$NBSP(.+)$/)
-            {
-               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-               $lgt->{'struct'} = $1;
-               $lgt->{'rem'} = $3;
-               $structbreak = 1 unless $2;
-            }
+            $lgt->{'lat'} = $1;
+            $lgt->{'latd'} = $2 + $3 / 60.0;
+            if ($4 eq "S") { $lgt->{'latd'} = -$lgt->{'latd'}; }
             $fbuf[$i] = "";
+            $prev_line = 'PL_LAT';
             next;
          }
+      }
 
-         if ($fbuf[$i] =~ /^period ([0-9]+(\.[0-9])?)s<br>/)
+      if ($fbuf[$i] =~ /(0°($NBSP)00.0´)<br>/)
+      {
+         unless ($lgt->{'lat'})
          {
-            $lgt->{'period'} = $1;
+            $lgt->{'lat'} = $1;
+            $lgt->{'latd'} = 0.0;
             $fbuf[$i] = "";
-            $prev_line = 'PL_PERIOD';
+            $prev_line = 'PL_LAT';
             next;
          }
-
-         if ($fbuf[$i] =~ /^(([0-9])($SPACES))?(($COLORS)\.($SPACES))?(fl|lt)\.($SPACES)([0-9]+(\.[0-9])?)s(,($SPACES)ec\.($SPACES)([0-9]+(\.[0-9])?)s)?/)
+         unless ($lgt->{'lon'})
          {
-            $lgt->{'sequence'} .= "," if $lgt->{'sequence'};
-            if ($2 || $5)
-            { 
-               $lgt->{'sequence'} .= "[";
-               $lgt->{'sequence'} .= $2 if $2;
-               $lgt->{'sequence'} .= "$5." if $5;
-               $lgt->{'sequence'} .= "]";
+            $lgt->{'lon'} = $1;
+            $lgt->{'lond'} = 0.0;
+            $fbuf[$i] = "";
+            $prev_line = 'PL_LON';
+            next;
+         }
+      }
+
+      if ($fbuf[$i] =~ /^(($COLORS)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?(.*?(\.)?)<br>/)
+      {
+         #$lgt->{'range'} .= ',' if $lgt->{'range'};
+         if ($lgt->{'range'})
+         {
+            unless (substr($lgt->{'range'}, length $lgt->{'range'} - 1, 1) eq ".")
+            {
+               $lgt->{'range'} .= ',';
             }
-            $lgt->{'sequence'} .= "$9";
-            $lgt->{'sequence'} .= "+($14)" if $14;
-            $fbuf[$i] = "";
-            $prev_line = 'PL_SEQ';
-            next;
+         }
+         $lgt->{'range'} .= $1 . $4;
+         $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+         $lgt->{'struct'} .= $6;
+         $structbreak = 1 unless $7;
+         $prev_line = 'PL_STRUCT';
+
+         if ($lgt->{'struct'} =~ /^(.*?[^A-Z]\.)(.*)$/)
+         {
+            #$lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+            $lgt->{'struct'} = $1;
+            $lgt->{'rem'} = $2;
          }
 
-         if ($fbuf[$i] =~ /^($COLORS)\.<br>/)
+         if (cap_test $lgt->{'struct'})
          {
-            $lgt->{'range'} .= "," if $lgt->{'range'};
-            $lgt->{'range'} .= "$1. ";
-            $fbuf[$i] = "";
-            $next_line = 'NL_CRNG';
-            $prev_line = 'PL_RNG';
-            next;
+            $structbreak = 1;
          }
-
-         if ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
+         elsif ($lgt->{'struct'} =~ /^(.*?(\.)?)$NBSP$NBSP(.+)$/)
          {
-            $lgt->{'range'} .= "," if $lgt->{'range'};
-            $lgt->{'range'} .= "$1. $4";
-            $fbuf[$i] = "";
-            $prev_line = 'PL_RNG';
-            next;
+            #$lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+            $lgt->{'struct'} = $1;
+            $lgt->{'rem'} = $3 . $lgt->{'rem'};
+            $structbreak = 1 unless $2;
+         }
+         $fbuf[$i] = "";
+         next;
+      }
+
+      if ($fbuf[$i] =~ /^period ([0-9]+(\.[0-9])?)s<br>/)
+      {
+         $lgt->{'period'} = $1;
+         $fbuf[$i] = "";
+         $prev_line = 'PL_PERIOD';
+         next;
+      }
+
+      if ($fbuf[$i] =~ /^(([0-9])($SPACES))?(($COLORS)\.($SPACES))?(fl|lt)\.($SPACES)([0-9]+(\.[0-9])?)s(,($SPACES)ec\.($SPACES)([0-9]+(\.[0-9])?)s)?/)
+      {
+         $lgt->{'sequence'} .= "," if $lgt->{'sequence'};
+         if ($2 || $5)
+         { 
+            $lgt->{'sequence'} .= "[";
+            $lgt->{'sequence'} .= $2 if $2;
+            $lgt->{'sequence'} .= "$5." if $5;
+            $lgt->{'sequence'} .= "]";
+         }
+         $lgt->{'sequence'} .= "$9";
+         $lgt->{'sequence'} .= "+($14)" if $14;
+         $fbuf[$i] = "";
+         $prev_line = 'PL_SEQ';
+         next;
+      }
+
+      if ($fbuf[$i] =~ /^($COLORS)\.<br>/)
+      {
+         $lgt->{'range'} .= "," if $lgt->{'range'};
+         $lgt->{'range'} .= "$1. ";
+         $fbuf[$i] = "";
+         $next_line = 'NL_CRNG';
+         $prev_line = 'PL_RNG';
+         next;
+      }
+
+      if ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
+      {
+         $lgt->{'range'} .= "," if $lgt->{'range'};
+         $lgt->{'range'} .= "$1. $4";
+         $fbuf[$i] = "";
+         $prev_line = 'PL_RNG';
+         next;
  
-         }
+      }
          
-         unless ($lgt->{'struct'})
+      unless ($lgt->{'struct'})
+      {
+         if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br>/)
          {
-            if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br>/)
-            {
-               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-               $lgt->{'struct'} = $1;
-               $structbreak = 1 unless $2;
-               $fbuf[$i] = "";
-               $prev_line = 'PL_STRUCT';
-               next;
-            }
-        }
+            $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+            $lgt->{'struct'} = $1;
+            $structbreak = 1 unless $2;
+            $fbuf[$i] = "";
+            $prev_line = 'PL_STRUCT';
+            next;
+         }
+     }
 
-        unless ($lgt->{'range'})
-        {
-            if ($fbuf[$i] =~ /^([0-9]+)($SPACES)([A-Z].*(\.))<br>/)
+     unless ($lgt->{'range'})
+     {
+         if ($fbuf[$i] =~ /^([0-9]+)($SPACES)([A-Z].*(\.))<br>/)
+         {
+            $lgt->{'range'} = $1;
+            $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+            $lgt->{'struct'} = $3;
+            $structbreak = 1 unless $4;
+            $fbuf[$i] = "";
+            $prev_line = 'PL_STRUCT';
+            next;
+         }
+         if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br>/)
+         {
+            if (!$lgt->{'struct'} || !$lgt->{'rem'})
             {
                $lgt->{'range'} = $1;
-               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-               $lgt->{'struct'} = $3;
-               $structbreak = 1 unless $4;
                $fbuf[$i] = "";
-               $prev_line = 'PL_STRUCT';
+               $prev_line = 'PL_RANGE';
                next;
             }
          }
+      }
  
-         unless ($lgt->{'height_m'})
+      unless ($lgt->{'height_m'})
+      {
+         if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br>/)
          {
-            if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br>/)
-            {
-               $lgt->{'height_m'} = $1;
-               $fbuf[$i] = "";
-               $next_line = 'NL_STRUCT' if $structbreak;
-               $prev_line = 'PL_HEIGHT_M';
-               next;
-            }
-         }
-
-
-         if ($prev_line eq 'PL_STRUCT')
-         {
-            $lgt->{'rem'} .= $fbuf[$i];
+            $lgt->{'height_m'} = $1;
             $fbuf[$i] = "";
-            $prev_line = 'PL_REM';
+            $next_line = 'NL_STRUCT' if $structbreak;
+            $prev_line = 'PL_HEIGHT_M';
             next;
          }
+      }
 
-         if ($structbreak)
-         {
-            $fbuf[$i] =~ /^(.*?(\.)?)<br>/;
-            $lgt->{'struct'} .= " $1";
-            $structbreak = 0 if $2;
-            $fbuf[$i] = "";
-            $prev_line = 'PL_STRUCT';
-            next;
-         }
+
+      if ($prev_line eq 'PL_STRUCT')
+      {
+         $lgt->{'rem'} .= $fbuf[$i];
+         $fbuf[$i] = "";
+         $prev_line = 'PL_REM';
+         next;
+      }
+
+      if ($structbreak)
+      {
+         $fbuf[$i] =~ /^(.*?(\.)?)<br>/;
+         $lgt->{'struct'} .= " $1";
+         $structbreak = 0 if $2;
+         $fbuf[$i] = "";
+         $prev_line = 'PL_STRUCT';
+         next;
+      }
  
-         $prev_line = 0;
-
+      $prev_line = 0;
 
    } # for ()
 
