@@ -40,6 +40,12 @@ $(TARGET).osm.bz2: $(TARGET).osm
 $(TARGET).csv.bz2: $(TARGET).csv
 	bzip2 -c $(TARGET).csv > $(TARGET).csv.bz2
 
+$(TARGET).xml: $(TARGET).csv
+	if test -e $(TARGET).xml ; then \
+		cp $(TARGET).xml $(TARGET).xml~ ; \
+	fi
+	$(BINPATH)/gen_xml.pl < $(TARGET).csv > $(TARGET).xml
+
 bz2: $(TARGET).osm.bz2 $(TARGET).csv.bz2
 	
 clean:
