@@ -300,7 +300,7 @@ while (<STDIN>)
    }
 
    # detect US NGA number
-   if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
+   if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z“])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
    {
       my $c = $lineno - $light{'lineno'};
       # Stanzas should have at least a view lines. 3 is good value for at least
@@ -712,8 +712,22 @@ for my $lgt (@lbuf)
                $prev_line = 'PL_STRUCT';
                next;
             }
-         }
+        }
 
+        unless ($lgt->{'range'})
+        {
+            if ($fbuf[$i] =~ /^([0-9]+)($SPACES)([A-Z].*(\.))<br>/)
+            {
+               $lgt->{'range'} = $1;
+               $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+               $lgt->{'struct'} = $3;
+               $structbreak = 1 unless $4;
+               $fbuf[$i] = "";
+               $prev_line = 'PL_STRUCT';
+               next;
+            }
+         }
+ 
          unless ($lgt->{'height_m'})
          {
             if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br>/)
