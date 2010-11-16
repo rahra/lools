@@ -64,6 +64,7 @@ while (my $ref = $sth->fetchrow_hashref())
    print "      <tag k='ref' v='$intnr' />\n";
    print "      <tag k='source' v='$ref->{'source'}' />\n";
    print "      <tag k='seamark:light:ref' v='$intnr' />\n";
+   print "      <tag k='seamark:fixme' v='$ref->{'error'}' />\n" if $ref->{'error'};
 
    $ref->{'character'} =~ s/\.//g;
    print "      <tag k='seamark:light:character' v='$ref->{'character'}' />\n";
