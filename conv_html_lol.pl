@@ -997,6 +997,28 @@ for my $lgt (@lbuf)
          $lgt->{'error'} .= 'height';
       }
    }
+   # try to guess if height_m was accidentally detected as range.
+   elsif ($lgt->{'height_ft'} && !$lgt->{'height_m'})
+   {
+      if ($lgt->{'range'} =~ /^[0-9]+$/)
+      {
+         if (($lgt->{'height_ft'} / $lgt->{'range'} < 3.0) || ($lgt->{'height_ft'} / $lgt->{'range'} > 3.6))
+         {
+            $lgt->{'error'} .= ',' if $lgt->{'error'};
+            $lgt->{'error'} .= 'height';
+         }
+         else
+         {
+            $lgt->{'height_m'} = $lgt->{'range'};
+            undef $lgt->{'range'};
+         }
+      }
+      else
+      {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'height';
+      }
+   }
    elsif ($lgt->{'height_m'} || $lgt->{'height_ft'})
    {
       $lgt->{'error'} .= ',' if $lgt->{'error'};
