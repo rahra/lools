@@ -1,4 +1,10 @@
 #!/usr/bin/perl
+#
+# This script generates an XML file out of the tabbed CSV file.
+# 
+# @author Bernhard R. Fischer
+# @version 20101116
+#
 
 use strict;
 
@@ -19,12 +25,12 @@ while (<STDIN>)
    $lineno++;
    chomp;
    s/'/&apos;/g;
-   #s/"//g;
    my @vals = split /\t/;
 
    print "   <csventry line='$lineno'>\n";
    for (my $i = 0; $i < @keys; $i++)
    {
+      $vals[$i] =~ s/^"(.*)"$/\1/;
       print "      <csvcol k='$keys[$i]' v='$vals[$i]' />\n" if length "$vals[$i]";
    }
    print "   </csventry>\n";
