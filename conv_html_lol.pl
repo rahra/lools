@@ -58,7 +58,7 @@ my $prev_line = 0;
 
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
-my $rem_keywords = "obsc|shore|visible|occasional|intensified|whistle|synchronized|private";
+my $rem_keywords = "obsc|shore|visible|occasional|intensified|whistle|synchronized|private|siren";
 my %direction = (
    'N' => { 'name' => 'north', 'bear' => 0 },
    'NNE' => { 'name' => 'north north east', 'bear' => 22.5 },
@@ -621,7 +621,14 @@ for my $lgt (@lbuf)
 
       if ($fbuf[$i] =~ /^(($COLORS)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?(.*?(\.)?)<br>/)
       {
-         #$lgt->{'range'} .= ',' if $lgt->{'range'};
+         if ($lgt->{'struct'} && !$structbreak)
+         {
+            $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
+            $lgt->{'rem'} .= $fbuf[$i];
+            $fbuf[$i] = "";
+            $prev_line = 'PL_REM';
+            next;
+         }
          if ($lgt->{'range'})
          {
             unless (substr($lgt->{'range'}, length $lgt->{'range'} - 1, 1) eq ".")
@@ -781,20 +788,29 @@ for my $lgt (@lbuf)
 
       if ($structbreak)
       {
-         $fbuf[$i] =~ /^(.*?(\.)?)<br>/;
-         $lgt->{'struct'} .= " $1";
-         $structbreak = 0 if $2;
+         if ($fbuf[$i] =~ /^(.*; [0-9]+\.)(&nbsp;.*)<br>/)
+         {
+            $lgt->{'struct'} .= " $1";
+            $structbreak = 0;
+            $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
+            $lgt->{'rem'} .= $2;
+            $prev_line = 'PL_REM';
          $fbuf[$i] = "";
-         $prev_line = 'PL_STRUCT';
          next;
+         }
+         elsif ($fbuf[$i] =~ /^(.*?(\.)?)<br>/)
+         {
+            $lgt->{'struct'} .= " $1";
+            $structbreak = 0 if $2;
+            $prev_line = 'PL_STRUCT';
+         $fbuf[$i] = "";
+         next;
+         }
       }
  
       $prev_line = 0;
 
    } # for ()
-
-#   print "LIGHT:\t";
-#   output_light $lgt;
 }
 
 pprogress "\n$lightcnt lights processed.\n";
