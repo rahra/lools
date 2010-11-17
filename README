@@ -1,0 +1,55 @@
+
+DESCRIPTION
+This is a very quick HOWTO on the "List of Lights" text processor.
+
+
+PREREQUISITES
+
+1) You need a mysql database server if you intend to generate OSM files. If
+you just want to generate a CSV or XML, a mysql is not needed.
+
+2) You need the original list of lights PDF documents of the US NGA. Those are
+found at www.nga.mil/maritime. Download the files you need and copy them into
+this directory. The files are named /Pub11?bk.pdf/.
+
+3) Perl must be installed on your machine. Version 5.8 or higher is
+recommended.
+
+4) If you don't like to do all steps manually, you need the GNU make utility.
+This is recommended.
+
+
+PREPARE MYSQL
+
+1) We assume that the mysql is already installed. If not, conduct the appropriate
+documentation on how to setup mysql.
+
+2) Create a database named 'list_of_lights' and add a user who has at least
+select/insert/update rights on it.
+
+3) Edit the file 'Makefile.cr' and 'gen_osm.pl' and set the mysql account
+information to your needs.
+
+3) Create the tables 'lights' and 'sectors'. This is done by just inserting the
+file 'list_of_lights.sql' into your database. The file contains the table
+creation information.
+
+
+EXECUTE SCRIPTS AND GENERATE CVS/OSM FILES
+
+1) Now just type 'make'. It should process all PDFs automatically. The result
+is several new files: CSV, SQL and OSM (and some temporary files).
+The CSV is a TAB-separated file containing the lights information tabulated.
+The XML file contains the same information in raw XML.  The SQL file contains
+the same information but in SQL statements. The OSM (which is more than just
+raw XML) file contains the same inforamtion and can be loaded into josm.
+
+Please note that the CSV and XML file are complete but the OSM and the SQL are
+currently not. They contain all lights but not all data that was found for each
+light.
+
+
+AUTHOR
+
+Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+
