@@ -408,7 +408,7 @@ while (<STDIN>)
 
    # try to detect area
    my $a = $_;
-   if ($a =~ /^<b>((&nbsp;|[A-Z -])*)<\/b><br>$/)
+   if ($a =~ /^<b>((&nbsp;|[A-Z ()-])*)<\/b><br>$/)
    { 
       $areaguess = $1; 
       $prev_line = "AREAGUESS";
