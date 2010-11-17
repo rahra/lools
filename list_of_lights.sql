@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 22. Oktober 2010 um 20:16
--- Server Version: 5.1.49
--- PHP-Version: 5.3.2-2
+-- Generation Time: Nov 17, 2010 at 03:09 PM
+-- Server version: 5.1.49
+-- PHP Version: 5.3.3-2
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
@@ -16,13 +16,13 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Datenbank: `list_of_lights`
+-- Database: `list_of_lights`
 --
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `lights`
+-- Table structure for table `lights`
 --
 
 CREATE TABLE IF NOT EXISTS `lights` (
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `usl_subnr` char(3) NOT NULL,
   `section_name` varchar(256) NOT NULL,
   `name` varchar(256) NOT NULL,
-  `name_comb` varchar(256) NOT NULL,
+  `longname` varchar(256) NOT NULL,
   `lat` float NOT NULL,
   `lon` float NOT NULL,
   `character_full` varchar(32) NOT NULL,
@@ -65,6 +65,9 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `error` set('position','beacon_guess','height','intdup','name_incomplete','usldup') NOT NULL,
   `source` varchar(256) NOT NULL,
   `remarks` varchar(256) NOT NULL,
+  `dir` int(6) DEFAULT NULL,
+  `dirdist` int(6) DEFAULT NULL,
+  `leading` enum('front','rear') DEFAULT NULL,
   PRIMARY KEY (`usl_list`,`usl_nr`,`usl_subnr`),
   UNIQUE KEY `int_chr` (`int_chr`,`int_nr`,`int_subnr`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -72,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `sectors`
+-- Table structure for table `sectors`
 --
 
 CREATE TABLE IF NOT EXISTS `sectors` (
