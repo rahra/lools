@@ -58,7 +58,7 @@ my $prev_line = 0;
 
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
-my $rem_keywords = "obsc|shore|visible|occasional|intensified|whistle|synchronized|private|siren";
+my $rem_keywords = "obsc|shore|visible|occasional|intensified|whistle|synchronized|private|siren|reflector";
 my %direction = (
    'N' => { 'name' => 'north', 'bear' => 0 },
    'NNE' => { 'name' => 'north north east', 'bear' => 22.5 },
@@ -540,10 +540,21 @@ for my $lgt (@lbuf)
                }
                else
                {
-                  $fbuf[$i] =~ /^(.*?(\.)?)<br>$/;
-                  $lgt->{'struct'} .= " " . $1;
-                  $structbreak = 0 if $2;
-                  $prev_line = 'PL_STRUCT';
+                  if ($fbuf[$i] =~ /^(.*([^A-Z]))$NBSP$NBSP(.*)<br>/)
+                  {
+                     $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
+                     $lgt->{'struct'} .= $1;
+                     $structbreak = $3 eq '.' ? 0 : 1;
+                     $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
+                     $lgt->{'rem'} .= $3;
+                     $prev_line = 'PL_REM';
+                  }
+                  elsif ($fbuf[$i] =~ /^(.*?(\.)?)<br>$/)
+                  {
+                     $lgt->{'struct'} .= " " . $1;
+                     $structbreak = 0 if $2;
+                     $prev_line = 'PL_STRUCT';
+                  }
                }
             }
             case 'NL_CRNG'
@@ -1301,7 +1312,7 @@ while (<STDIN>)
 
 pprogress "\nuslcnt = $uslcnt\nintcnt = $intcnt\nunmatch = $unmatch\n";
 
-pprogress "\n----- PASS 5 -----\nmatch index to lights\n";
+pprogress "\n----- PASS 5 -----\nPostprocessing of lights and index matching.\n";
 
 # This run tries to compares the index of the LoL to the lights stanzas. It
 # Further creates the full name of light by checking leading dashes.
