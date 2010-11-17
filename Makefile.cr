@@ -46,6 +46,21 @@ $(TARGET).xml: $(TARGET).csv
 	fi
 	$(BINPATH)/gen_xml.pl < $(TARGET).csv > $(TARGET).xml
 
+$(TARGET)_alt.csv: $(TARGET)_.csv
+	AC=3 ; \
+		echo -n > $(TARGET)_alt.csv ; \
+		CSV=`mktemp` ; \
+		HTM=`mktemp` ; \
+		cp $(TARGET)_.csv $$CSV ; \
+		while test $$AC -gt 2 ; \
+		do \
+			$(BINPATH)/gen_altchar.pl < $$CSV > $$HTM ; \
+			$(BINPATH)/conv_html_lol.pl < $$HTM > $$CSV ; \
+			cat $$CSV >> $(TARGET)_alt.csv ; \
+			AC=`wc -l < $$HTM` ; \
+		done ; \
+		rm $$CSV $$HTM
+
 bz2: $(TARGET).osm.bz2 $(TARGET).csv.bz2
 	
 clean:

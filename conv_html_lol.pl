@@ -58,6 +58,7 @@ my $prev_line = 0;
 
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
+my $rem_keywords = "obsc|shore|visible|occasional|intensified|whistle|synchronized|private";
 my %direction = (
    'N' => { 'name' => 'north', 'bear' => 0 },
    'NNE' => { 'name' => 'north north east', 'bear' => 22.5 },
@@ -705,11 +706,23 @@ for my $lgt (@lbuf)
       {
          if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br>/)
          {
-            $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
-            $lgt->{'struct'} = $1;
-            $structbreak = 1 unless $2;
+            my $struct = $1;
+            my $break = $2;
+
+            # try to detect if this structure is a remark instead.
+            if ($struct =~ /$rem_keywords/i)
+            {
+               $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
+               $lgt->{'rem'} .= $struct;
+               $prev_line = 'PL_REM';
+            }
+            else
+            {
+               $lgt->{'struct'} = $struct;
+               $structbreak = 1 unless $break;
+               $prev_line = 'PL_STRUCT';
+            }
             $fbuf[$i] = "";
-            $prev_line = 'PL_STRUCT';
             next;
          }
      }
@@ -735,6 +748,13 @@ for my $lgt (@lbuf)
                $prev_line = 'PL_RANGE1';
                next;
             }
+         }
+         if ($fbuf[$i] =~ /^([0-9]+)<br>$/)
+         {
+            $lgt->{'range'} = $1;
+            $fbuf[$i] = "";
+            $prev_line = 'PL_RANGE';
+            next;
          }
       }
  
