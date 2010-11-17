@@ -565,14 +565,22 @@ for my $lgt (@lbuf)
                   $lgt->{'range'} .= $1;
                   $prev_line = 'PL_CRNG';
                }
-               elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)<br>/)
+               elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)($NBSP$NBSP(.*))?<br>/)
                {
                   $lgt->{'range'} .= $1;
                   $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
                   $lgt->{'struct'} .= $3;
-                  if ($4) { $structbreak = 0; }
-                  else { $structbreak = 1; }
-                  $prev_line = 'PL_STRUCT';
+                  $structbreak = $4 eq '.' ? 0 : 1;
+                  if ($6)
+                  {
+                     $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
+                     $lgt->{'rem'} .= $6;
+                     $prev_line = 'PL_REM';
+                  }
+                  else
+                  {
+                     $prev_line = 'PL_STRUCT';
+                  }
                }
             }
          }
