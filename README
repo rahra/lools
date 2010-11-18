@@ -46,6 +46,10 @@ The XML file contains the same information in raw XML.  The SQL file contains
 the same information but in SQL statements. The OSM (which is more than just
 raw XML) file contains the same inforamtion and can be loaded into josm.
 
+2) To generate a world OSM file containing all lights just run the perl script
+`./gen_osm.pl > world.osm`. It reads all data out of the mysql and converts
+it into an OSM file.
+
 Please note that the CSV and XML file are complete but the OSM and the SQL are
 currently not. They contain all lights but not all data that was found for each
 light.
