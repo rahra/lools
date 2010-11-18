@@ -81,7 +81,7 @@ while (<STDIN>)
    }
 
    # set some missing default values if missing
-   $val{'multiplcty'} = 1 unless $val{'multiplcty'};
+   $val{'multi'} = 1 unless $val{'multi'};
    $val{'period'} = 0 unless $val{'period'};
    $val{'height_m'} = 0 unless $val{'height_m'};
    $val{'height_ft'} = 0 unless $val{'height_ft'};
@@ -93,7 +93,7 @@ while (<STDIN>)
 
    undef $char;
    undef $group;
-   if ($val{'character'} =~ /^([0-9] ?)?(Dir\.)?(F|L.Fl|Al.Fl|Fl|Iso|Oc|V.Q|U.Q|Q|Mo)\.(\((.*?)\))?/)
+   if ($val{'char'} =~ /^([0-9] ?)?(Dir\.)?(F|L.Fl|Al.Fl|Fl|Iso|Oc|V.Q|U.Q|Q|Mo)\.(\((.*?)\))?/)
    {
       $char = $3;
       $group = $5;
@@ -107,7 +107,7 @@ while (<STDIN>)
    my $fsignal = $val{'fsignal'} ? "'$val{'fsignal'}'" : 'NULL';
 
    #$topm = $val{'topmark'} ? 1 : 0;
-   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'character'}','$char','$group','$val{'mult_pos'}',$val{'period'},$val{'multiplcty'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'remark'}',$val{'dir'},$val{'dirdist'},$leading";
+   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'char'}','$char','$group','$val{'mpos'}',$val{'period'},$val{'multi'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'rem'}',$val{'dir'},$val{'dirdist'},$leading";
 
    print ");\n";
 
@@ -118,7 +118,7 @@ while (<STDIN>)
    my $end = 0;
 
    my @defcol = ();
-   while ($val{'character'} =~ /($colors)\./g) { push @defcol, $1; }
+   while ($val{'char'} =~ /($colors)\./g) { push @defcol, $1; }
 
    # insert all sectors that are found
    if ($val{'sector'} =~ /$intensv/) { print STDERR "$uslnr, $val{'sector'}\n"; }

@@ -56,6 +56,15 @@ my $charbreak = 0;
 my $next_line = 0;
 my $prev_line = 0;
 
+my @keys = (
+   'lineno', 'area', 'section', 'intnr', 'usl_list', 'uslnr', 'cat', 'dashes',
+   'name', 'longname', 'indname', 'n_inc', 'front', 'rear', 'dirdist', 'dir',
+   'lat', 'lon', 'latd', 'lond', 'char', 'altchar', 'multi', 'mpos', 'period',
+   'sequence', 'height_ft', 'height_m', 'range', 'struct', 'rem', 'sector',
+   'racon', 'altlight', 'type', 'topmark', 'typea', 'strcthgt_ft', 'bsystem',
+   'shape', 'shapecol', 'rreflect', 'fsignal', 'source', 'error'
+);
+
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
 my $shapecolors = "red|green|black|white|gr[ae]y|yel[l]?ow";
 my $rem_keywords = "obsc|shore|visible|occasional|intensified|whistle|synchronized|private|siren|reflector";
@@ -126,11 +135,19 @@ sub output_light
    my $l = shift;
    if (!$l->{'intnr'} && !$l->{'uslnr'})
    {
-      print "LINENO\tAREA\tSECTION\tINTNR\tUSL_LIST\tUSLNR\tCATEGORY\tDASHES\tNAME\tLONGNAME\tINDNAME\tN_INC\tFRONT\tREAR\tDIRDIST\tDIR\tLAT\tLON\tLATD\tLOND\tCHARACTER\tALTCHAR\tMULTIPLCTY\tMULT_POS\tPERIOD\tSEQUENCE\tHEIGHT_FT\tHEIGHT_M\tRANGE\tSTRUCT\tREMARK\tSECTOR\tRACON\tALT_LIGHT\tTYPE\tTOPMARK\tTYPEA\tSTRCTHGT_FT\tBSYSTEM\tSHAPE\tSHAPECOL\tRREFLECT\tFSIGNAL\tSOURCE\tERROR\n";
+      for (my $i = 0; $i < @keys - 1; $i++)
+      {
+         print $keys[$i] . "\t";
+      }
+      print $keys[@keys - 1] . "\n";
       return;
    }
 
-   print "$l->{'lineno'}\t\"$l->{'area'}\"\t\"$l->{'section'}\"\t\"$l->{'intnr'}\"\t$pub_nr\t\"$l->{'uslnr'}\"\t$l->{'cat'}\t\"$l->{'dashes'}\"\t\"$l->{'name'}\"\t\"$l->{'longname'}\"\t$l->{'indname'}\t$l->{'n_inc'}\t$l->{'front'}\t$l->{'rear'}\t$l->{'dirdist'}\t$l->{'dir'}\t$l->{'lat'}\t$l->{'lon'}\t$l->{'latd'}\t$l->{'lond'}\t$l->{'char'}\t$l->{'altchar'}\t$l->{'multi'}\t$l->{'mpos'}\t$l->{'period'}\t$l->{'sequence'}\t$l->{'height_ft'}\t$l->{'height_m'}\t$l->{'range'}\t\"$l->{'struct'}\"\t\"$l->{'rem'}\"\t$l->{'sector'}\t$l->{'racon'}\t$l->{'altlight'}\t$l->{'type'}\t$l->{'topmark'}\t$l->{'typea'}\t$l->{'strcthgt_ft'}\t$l->{'bsystem'}\t$l->{'shape'}\t$l->{'shapecol'}\t$l->{'rreflect'}\t$l->{'fsignal'}\t$source\t$l->{'error'}\n";
+   for (my $i = 0; $i < @keys - 1; $i++)
+   {
+      print $l->{$keys[$i]} . "\t";
+   }
+   print $l->{$keys[@keys - 1]} . "\n";
 }
 
 
@@ -1437,6 +1454,10 @@ for my $lgt (@lbuf)
    $lgt->{'longname'} =~ s/ [ ]+/ /g;
    $lgt->{'longname'} =~ s/^ +//g;
    $lgt->{'longname'} =~ s/ +$//g;
+
+   # set source of information
+   $lgt->{'source'} = $source;
+   $lgt->{'usl_list'} = $pub_nr;
 
    print "LIGHT:\t";
    output_light $lgt;
