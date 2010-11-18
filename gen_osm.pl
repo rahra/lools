@@ -6,7 +6,7 @@ use strict;
 use DBI;
 
 # read database configuration
-my %dbconf = ('name' => "../db.conf");
+my %dbconf = ('name' => "db.conf");
 open DBCONF, $dbconf{'name'} or die "*** cannot open file $dbconf{'name'}!\n";
 while (<DBCONF>)
 {

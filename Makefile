@@ -3,15 +3,10 @@
 all:
 	for f in Pub11?bk.pdf ; do \
 		nr=$${f}_make ; \
-		if test ! -e $$nr ; then \
-			mkdir $$nr ; \
-		fi ; \
-		if test ! -e $$nr/Makefile ; then \
-			ln -s ../Makefile.cr $$nr/Makefile ; \
-		fi ; \
-		if test ! -e $$nr/$$f ; then \
-			ln -s ../$$f $$nr/$$f ; \
-		fi ; \
+		if test ! -e $$nr ; then mkdir $$nr ; fi ; \
+		if test ! -e $$nr/Makefile ; then ln -s ../Makefile.cr $$nr/Makefile ; fi ; \
+		if test ! -e $$nr/$$f ; then ln -s ../$$f $$nr/$$f ; fi ; \
+		if test ! -e $$nr/db.conf ; then ln -s ../db.conf $$nr/db.conf ; fi ; \
 		echo $$f | perl -pe 'print "NR=";s/[^0-9\n]//g' > $$nr/NR ; \
 		make -C $$nr ; \
 		done
