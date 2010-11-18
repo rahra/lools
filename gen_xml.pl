@@ -2,7 +2,7 @@
 #
 # This script generates an XML file out of the tabbed CSV file.
 # 
-# @author Bernhard R. Fischer
+# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
 # @version 20101116
 #
 

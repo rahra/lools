@@ -1,3 +1,5 @@
+# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+
 NR=$(shell cat NR 2> /dev/null)
 ifeq ($(NR),)
 	NR=$(shell basename `pwd`)
@@ -5,9 +7,7 @@ else
 include NR
 endif
 
-# MySQL account data. Edit this to your needs!
-MYSQL_USER=lol
-MYSQL_PASS=lol1234
+include ../db.conf
 
 TARGET=Pub$(NR)bk
 LOGFILE=lol.log
@@ -32,7 +32,7 @@ $(TARGET).sql: $(TARGET).csv
 	$(BINPATH)/gen_sql.pl < $(TARGET).csv > $(TARGET).sql 2>> $(LOGFILE)
 
 $(TARGET).mysql: $(TARGET).sql
-	mysql -f -u$(MYSQL_USER) -p$(MYSQL_PASS) list_of_lights < $(TARGET).sql
+	mysql -f -u$(MYSQL_USER) -p$(MYSQL_PASS) $(MYSQL_DB) < $(TARGET).sql
 	touch $(TARGET).mysql
 
 $(TARGET).osm: $(TARGET).mysql

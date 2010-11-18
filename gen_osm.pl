@@ -1,12 +1,27 @@
 #!/usr/bin/perl
+# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+#
 
 use strict;
 use DBI;
 
-my $dsn = "DBI:mysql:database=list_of_lights;host=localhost;port=3306";
-my $dbh = DBI->connect($dsn, "root", "060378hasen", {RaiseError => 1});
+# read database configuration
+my %dbconf = ('name' => "../db.conf");
+open DBCONF, $dbconf{'name'} or die "*** cannot open file $dbconf{'name'}!\n";
+while (<DBCONF>)
+{
+   chomp;
+   next if /^\s*#/;
+   my @line = split /=/;
+   next if @line != 2;
+   $dbconf{$line[0]} = $line[1];
+}
+close DBCONF;
 
-my $pub_nr = `cat NR`;
+my $dsn = "DBI:mysql:database=$dbconf{'MYSQL_DB'};host=localhost;port=3306";
+my $dbh = DBI->connect($dsn, $dbconf{'MYSQL_USER'}, $dbconf{'MYSQL_PASS'}, {RaiseError => 1});
+
+my $pub_nr = `if test -e NR ; then cat NR ; fi`;
 $pub_nr =~ s/[^0-9]//g;
 print STDERR "Generating OSM for Pub. $pub_nr\n";
 my $where = "WHERE usl_list='$pub_nr'" if $pub_nr;

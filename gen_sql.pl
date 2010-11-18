@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+#
+# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+#
 
 use strict;
 use feature ":5.10";

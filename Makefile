@@ -1,40 +1,39 @@
-PUB=110 111 112 113 114 115 116
+# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
 
 all:
-	for nr in $(PUB) ; do \
+	for f in Pub11?bk.pdf ; do \
+		nr=$${f}_make ; \
 		if test ! -e $$nr ; then \
 			mkdir $$nr ; \
 		fi ; \
 		if test ! -e $$nr/Makefile ; then \
 			ln -s ../Makefile.cr $$nr/Makefile ; \
 		fi ; \
-		if test ! -e $$nr/Pub$${nr}bk.pdf ; then \
-			ln -s ../Pub$${nr}bk.pdf $$nr/Pub$${nr}bk.pdf ; \
+		if test ! -e $$nr/$$f ; then \
+			ln -s ../$$f $$nr/$$f ; \
 		fi ; \
-		echo NR=$$nr > $$nr/NR ; \
+		echo $$f | perl -pe 'print "NR=";s/[^0-9\n]//g' > $$nr/NR ; \
 		make -C $$nr ; \
 		done
 
 bz2:
-	for nr in $(PUB) ; do \
-		make -C $$nr bz2 ; \
+	for nr in Pub11?bk.pdf ; do \
+		make -C $${nr}_make bz2 ; \
 		done
 
-:
-
 clean:
-	for nr in $(PUB) ; do \
-		make -C $$nr clean ; \
+	for nr in Pub11?bk.pdf ; do \
+		make -C $${nr}_make clean ; \
 		done
 
 cleancsv:
-	for nr in $(PUB) ; do \
-		make -C $$nr cleancsv ; \
+	for nr in Pub11?bk.pdf ; do \
+		make -C $${nr}_make cleancsv ; \
 		done
 
 cleanall:
-	for nr in $(PUB) ; do \
-		rm -rf $$nr ; \
+	for nr in Pub11?bk.pdf ; do \
+		rm -rf $${nr}_make ; \
 		done
 
 .PHONY: clean cleancsv cleanall bz2
