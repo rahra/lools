@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# @author Bernhard R. Fischer
+# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
 #
 # (1) Convert the original PDF document to an HTML by using pdftohtml:
 # `pdftohtml -f 33 -l 470 -noframes Pub113bk.pdf`
