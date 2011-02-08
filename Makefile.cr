@@ -2,7 +2,7 @@
 
 NR=$(shell cat NR 2> /dev/null)
 ifeq ($(NR),)
-	NR=$(shell basename `pwd`)
+	NR=$(shell basename `pwd` | tr -d -c '[:digit:]')
 else
 include NR
 endif
