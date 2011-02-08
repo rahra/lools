@@ -151,6 +151,20 @@ sub output_light
 }
 
 
+sub test_name
+{
+   my $a = shift;
+
+   $a =~ s/&[a-z]*?;/ /g;
+   if ($a =~ /;/)
+   {
+      return 1;
+   }
+
+   return 0;
+}
+
+
 pprogress "----- PASS 1 -----\n";
 my $no_detect = 0;
 my $start = 0;
@@ -333,6 +347,11 @@ while (<STDIN>)
          $prev_line = 0;
          dprint "MATCHILL ($c) '$_'\n";
       }
+      elsif (test_name $_)
+      {
+         $prev_line = 0;
+         dprint "MATCHILL2 ($c) '$_'\n";
+      }
       else
       {
          dprint "MATCH ($c) '$_'\n";
@@ -502,7 +521,7 @@ for my $lgt (@lbuf)
 
       # detect second light
       # FIXME: pattern does not work
-      if ($fbuf[$i] =~ /^<b>((Dir\.)?(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\.[^<]*)<\/b><br>/)
+      if ($fbuf[$i] =~ /^<b>(([0-9] )?(Dir\.)?(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\.[^<]*)<\/b><br>/)
       {
          unless ($lgt->{'char'}) 
          { 
@@ -752,8 +771,17 @@ for my $lgt (@lbuf)
             my $struct = $1;
             my $break = $2;
 
+            if ($struct =~ /^(.*?)($NBSP){2}(.*)$/)
+            {
+               #dprint "STR_SPLIT ($1 -- $3)\n";
+               $lgt->{'struct'} = $1;
+               $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
+               $lgt->{'rem'} .= $3;
+               unless ($lgt->{'struct'} =~ /\.$/) { $structbreak = 1; }
+               $prev_line = 'PL_STRUCT_REM';
+            }
             # try to detect if this structure is a remark instead.
-            if ($struct =~ /$rem_keywords/i)
+            elsif ($struct =~ /$rem_keywords/i)
             {
                $lgt->{'rem'} .= ' ' if $lgt->{'rem'};
                $lgt->{'rem'} .= $struct;
@@ -886,7 +914,7 @@ for my $lgt (@lbuf)
    }
 
    # check if light character contains muliplicity
-   if ($lgt->{'char'} =~ /^([0-9]) /) { $lgt->{'multi'} = $1; }
+   if ($lgt->{'char'} =~ /^([0-9])/) { $lgt->{'multi'} = $1; }
 
    # look for incomplete names
    unless ($lgt->{'name'} =~ /\.$/)
