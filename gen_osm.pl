@@ -134,10 +134,12 @@ while (my $ref = $sth->fetchrow_hashref())
       }
       if ($reg->{'start'} ne '')
       {
+         $reg->{'start'} = 'shore' if $reg->{'start'} == -1;
          print "         <tag k='seamark:light$sector_nr:sector_start' v='$reg->{'start'}' />\n";
       }
       if ($reg->{'end'} ne '')
       {
+         $reg->{'end'} = 'shore' if $reg->{'end'} == -1;
          print "         <tag k='seamark:light$sector_nr:sector_end' v='$reg->{'end'}' />\n";
       }
       if ($reg->{'visibility'} eq 'int')
