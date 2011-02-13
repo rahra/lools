@@ -12,7 +12,7 @@ $pub_nr =~ s/[^0-9]//g;
 
 my $lcnt = 1;
 my $colors = "W|R|G|Y|Bu|Or|Vi";
-my $visible = "Visible|Obscured|Intensified|Unintensified";
+my $visible = "Visible|Obscured|Intensified|Unintensified|obsc";
 my $intensv = '\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\)';
 my @vals;
 my %val;
@@ -77,7 +77,7 @@ while (<STDIN>)
    }
    else
    {
-      print "'u','$uslnr-$val{'usl_list'}','$uslsubnr',";
+      print "'u','$val{'usl_list'}-$uslnr','$uslsubnr',";
    }
 
    # set some missing default values if missing
@@ -131,6 +131,9 @@ while (<STDIN>)
       $end = $8 + $10 / 60;
 
       my $vis = "";
+
+      # skip explicitly obscured sector
+      next if $1 eq "obsc";
 
       given ($1)
       {

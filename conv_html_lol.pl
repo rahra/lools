@@ -763,7 +763,15 @@ for my $lgt (@lbuf)
          next;
  
       }
-         
+
+      if ($fbuf[$i] =~ /((Helicopter platform\.($SPACES)?)<br>)/)
+      {
+         $lgt->{'struct'} .= $2;
+         $fbuf[$i] =~ s/$1//;
+         $prev_line = 'PL_STRUCT';
+         next;
+      }
+
       unless ($lgt->{'struct'})
       {
          if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br>/)
@@ -933,7 +941,7 @@ for my $lgt (@lbuf)
    $sec =~ s/$SPACES//g;
 
    my $deg_pat = "([0-9]{3}°([0-9]{2}′)?)|shore|obsc\.";
-   while ($sec =~ /((Visible|Intensified|Obscured|($COLORS)\.)(from|\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
+   while ($sec =~ /((Visible|Intensified|Obscured|($COLORS)\.)?(from|\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
    {
       $lgt->{'sector'} .= ',' if $lgt->{'sector'};
       $lgt->{'sector'} .= $1;
@@ -1419,6 +1427,10 @@ for my $lgt (@lbuf)
       for (my $i = 1 + length $lgt->{'dashes'}; $i < @combname; $i++)
       {
          undef $combname[$i];
+      }
+      unless ($combname[0])
+      {
+         $combname[0] = $lgt->{'section'} . '.';
       }
       for (my $i = 0; $i < @combname; $i++)
       {

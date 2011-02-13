@@ -18,7 +18,8 @@ recommended.
 4) If you don't like to do all steps manually, you need the GNU make utility.
 This is recommended.
 
-5) You need the tool 'pdftohtml' having installed.
+5) You need the tool 'pdftohtml' (http://poppler.freedesktop.org/) having
+installed.
 
 
 PREPARE MYSQL
@@ -26,8 +27,8 @@ PREPARE MYSQL
 1) We assume that the mysql is already installed. If not, conduct the appropriate
 documentation on how to setup mysql.
 
-2) Create a database and add a user who has at least select/insert/update
-rights on it.
+2) Create a database and add a user who has at least
+select/insert/update/delete rights on it.
 
 3) Edit the file 'db.conf' and set the mysql account information to your needs
 (as defined in the previous step).

@@ -111,6 +111,7 @@ while (my $ref = $sth->fetchrow_hashref())
    elsif ($ref->{'leading'} eq 'rear')
    {
       print "      <tag k='seamark:light:category' v='leading;upper' />\n";
+      print "      <tag k='seamark:light:orientation' v='$ref->{'dir'}' />\n" if $ref->{'dir'};
    }
    if ($ref->{'sequence'})
    {
@@ -131,11 +132,11 @@ while (my $ref = $sth->fetchrow_hashref())
       {
          print "         <tag k='seamark:light$sector_nr:range' v='$reg->{'range'}' />\n";
       }
-      if ($reg->{'start'})
+      if ($reg->{'start'} ne '')
       {
          print "         <tag k='seamark:light$sector_nr:sector_start' v='$reg->{'start'}' />\n";
       }
-      if ($reg->{'end'})
+      if ($reg->{'end'} ne '')
       {
          print "         <tag k='seamark:light$sector_nr:sector_end' v='$reg->{'end'}' />\n";
       }
