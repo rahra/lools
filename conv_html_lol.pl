@@ -940,7 +940,9 @@ for my $lgt (@lbuf)
    my $sec = $lgt->{'rem'};
    $sec =~ s/$SPACES//g;
 
-   my $deg_pat = "([0-9]{3}°([0-9]{2}′)?)|shore|obsc\.";
+   # the pattern /(′|´|')/ is used instead of /[′|´|']/ because of
+   # troubles with utf8 charachters
+   my $deg_pat = "([0-9]{3}°([0-9]{2}(′|´|'))?)|shore|obsc\.";
    while ($sec =~ /((Visible|Intensified|Obscured|($COLORS)\.)?(from|\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\))?($deg_pat)?\-?($deg_pat))/g)
    {
       $lgt->{'sector'} .= ',' if $lgt->{'sector'};

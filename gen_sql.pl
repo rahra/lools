@@ -11,8 +11,8 @@ my $pub_nr = `cat NR`;
 $pub_nr =~ s/[^0-9]//g;
 
 my $lcnt = 1;
-my $colors = "W|R|G|Y|Bu|Or|Vi";
-my $visible = "Visible|Obscured|Intensified|Unintensified|obsc";
+my $colors = "W|R|G|Y|Bu|Or|Vi|obsc";
+my $visible = "Visible|Obscured|Intensified|Unintensified";
 my $intensv = '\(unint\.\)|\(int\.\)|\(intensified\)|\(unintensified\)';
 my @vals;
 my %val;
@@ -114,69 +114,120 @@ while (<STDIN>)
    my $loop = 0;
    my $col;
    my $coll = "";
-   my $start = 0;
-   my $end = 0;
+   my $start = -1;
+   my $end = -1;
+   my $err_sect = 0;
 
    my @defcol = ();
    while ($val{'char'} =~ /($colors)\./g) { push @defcol, $1; }
 
    # insert all sectors that are found
    if ($val{'sector'} =~ /$intensv/) { print STDERR "$uslnr, $val{'sector'}\n"; }
-   while ($val{'sector'} =~ /($colors|$visible)\.?($intensv)?(([0-9]{3,3})°(([0-9]+)′)?)?\-(([0-9]{3,3})°(([0-9]+)′)?)/g)
+
+   $val{'sector'} =~ s/from//g;
+   my @sects = split /,/, $val{'sector'};
+   for (my $i = 0; $i < @sects; $i++)
    {
-      print STDERR " $uslnr 1:$1 2:$2 3:$3 4:$4 5:$5 6:$6 7:$7 8:$8 9:$9 10:$10\n";
-
-      if ($4) { $start = $4 + $6 / 60; }
-      else { $start = $end; }
-      $end = $8 + $10 / 60;
-
-      my $vis = "";
-
-      # skip explicitly obscured sector
-      next if $1 eq "obsc";
-
-      given ($1)
+      print STDERR "$uslnr, SEC[$i]: $sects[$i]\n";
+      #                  12                    3          4      56            78               9      A            BC
+      if ($sects[$i] =~ /(($colors)\.|$visible)($intensv)?(shore|(([0-9]{3,3})°(([0-9]+)′)?))?[-]?(shore|([0-9]{3,3})°(([0-9]+)′)?)?/)
       {
-         when ("Obscured")
+         print STDERR "$uslnr, SEC 1:$1 2:$2 3:$3 4:$4 5:$5 6:$6 7:$7 8:$8 9:$9 10:$10\n";
+         # if there is a start but no end then it may be an end
+         if ($4)
          {
-            my $t = $start;
+            unless ($9)
+            {
+               $start = $end;
+               if ($4 eq 'shore')
+               {
+                  $end = -1;
+               }
+               else
+               {
+                  $end = $6 + $8 / 60;
+               }
+            }
+            else
+            {
+               if ($4 eq 'shore')
+               {
+                  $start = -1;
+               }
+               else
+               {
+                  $start = $6 + $8 / 60;
+               }
+            }
+         }
+         else
+         {
             $start = $end;
-            $end = $t;
-            $col = $defcol[0];
-            $coll .= "$defcol[0],";
          }
-         when ("Visible")
-         {
-            $col = $defcol[0];
-            $coll .= "$defcol[0],";
-         }
-         when ("Intensified")
-         {
-            $vis = "int";
-            $col = $defcol[0];
-            $coll .= "$defcol[0],";
-         }
-         when ("Unintensified")
-         {
-            $vis = "unint";
-            $col = $defcol[0];
-            $coll .= "$defcol[0],";
-         }
-         default
-         {
-            $col = $1;
-            $coll .= "$1,";
-         }
-      }
 
-      if ($2)
+         if ($9 eq 'shore')
+         {
+            $end = -1;
+         }
+         elsif ($9)
+         {
+            $end = $10 + $12 / 60;
+         }
+
+         my $vis = "";
+
+         # skip explicitly obscured sector
+         next if $2 eq "obsc";
+
+         given ($1)
+         {
+            when ("Obscured")
+            {
+               my $t = $start;
+               $start = $end;
+               $end = $t;
+               $col = $defcol[0];
+               $coll .= "$defcol[0],";
+            }
+            when ("Visible")
+            {
+               $col = $defcol[0];
+               $coll .= "$defcol[0],";
+            }
+            when ("Intensified")
+            {
+               $vis = "int";
+               $col = $defcol[0];
+               $coll .= "$defcol[0],";
+            }
+            when ("Unintensified")
+            {
+               $vis = "unint";
+               $col = $defcol[0];
+               $coll .= "$defcol[0],";
+            }
+            default
+            {
+               $col = $2;
+               $coll .= "$2,";
+            }
+         } # end given()
+
+         if ($3)
+         {
+            if ($3 =~ /unint/) { $vis = "unint"; }
+            else { $vis = "int"; }
+         }
+
+         print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
+         $loop++;
+ 
+      }
+      else
       {
-         if ($2 =~ /unint/) { $vis = "unint"; }
-         else { $vis = "int"; }
+         print "   -- sector error '$sects[$i]'\n";
+         $err_sect++;
       }
-
-      print "   INSERT INTO sectors VALUES (NULL, '$val{'usl_list'}',$uslnr,'$uslsubnr',NULL,$start,$end,'$col',NULL, '$vis');\n";
-      $loop++;
    }
 
    foreach my $c (@defcol)
@@ -204,6 +255,13 @@ while (<STDIN>)
       {
          print "   UPDATE sectors SET sectors.range=$2 WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr' AND colour='$1';\n";
       }
+   }
+
+   if ($err_sect)
+   {
+      $val{'error'} .= ',' if $val{'error'};
+      $val{'error'} .= 'check_sectors';
+      print "   UPDATE lights SET error='$val{'error'}' WHERE usl_list='$val{'usl_list'}' AND usl_nr=$uslnr AND usl_subnr='$uslsubnr';\n";
    }
 }
 
