@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 17, 2010 at 03:09 PM
+-- Generation Time: Feb 14, 2011 at 10:44 PM
 -- Server version: 5.1.49
--- PHP Version: 5.3.3-2
+-- PHP Version: 5.3.3-7
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS `sectors` (
   `usl_nr` int(11) NOT NULL,
   `usl_subnr` char(2) NOT NULL DEFAULT '',
   `sector_nr` int(2) unsigned NOT NULL AUTO_INCREMENT,
-  `start` float unsigned DEFAULT NULL,
-  `end` float unsigned DEFAULT NULL,
+  `start` float DEFAULT NULL,
+  `end` float DEFAULT NULL,
   `colour` enum('W','R','G','Y','Bu','Or','Vi') NOT NULL,
   `range` int(3) unsigned DEFAULT NULL,
   `visibility` enum('int','unint','') NOT NULL DEFAULT '',
