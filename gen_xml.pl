@@ -1,5 +1,22 @@
 #!/usr/bin/perl
 #
+#/* Copyright 2010,2011 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+# *
+# * This file is part of Lools (List of Light Tools).
+# *
+# * Lools is free software: you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation, version 3 of the License.
+# *
+# * Lools is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with Lools. If not, see <http://www.gnu.org/licenses/>.
+# */
+#
 # This script generates an XML file out of the tabbed CSV file.
 # 
 # @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>

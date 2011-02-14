@@ -1,9 +1,23 @@
-# @author Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
-#
+#/* Copyright 2010,2011 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+# *
+# * This file is part of Lools (List of Light Tools).
+# *
+# * Lools is free software: you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation, version 3 of the License.
+# *
+# * Lools is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with Lools. If not, see <http://www.gnu.org/licenses/>.
+# */
 
 SVNVER=$(shell svnversion | tr -d -c '[:digit:]')
-DISTFILES=Makefile Makefile.cr db.conf list_of_lights.sql README conv_html_lol.pl gen_altchar.pl gen_osm.pl gen_sql.pl gen_xml.pl
-DISTDST=list_of_lights-r$(SVNVER)
+DISTFILES=README COPYING Makefile Makefile.cr db.conf list_of_lights.sql conv_html_lol.pl gen_altchar.pl gen_osm.pl gen_sql.pl gen_xml.pl
+DISTDST=lools-r$(SVNVER)
 
 all:
 	for f in Pub11?bk.pdf ; do \
