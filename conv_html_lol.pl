@@ -77,8 +77,9 @@ my @keys = (
    'name', 'longname', 'indname', 'n_inc', 'front', 'rear', 'dirdist', 'dir',
    'lat', 'lon', 'latd', 'lond', 'char', 'altchar', 'multi', 'mpos', 'period',
    'sequence', 'height_ft', 'height_m', 'range', 'struct', 'rem', 'sector',
-   'racon', 'altlight', 'type', 'topmark', 'typea', 'strcthgt_ft', 'bsystem',
-   'shape', 'shapecol', 'rreflect', 'fsignal', 'source', 'error'
+   'racon', 'racon_grp', 'racon_period', 'altlight', 'type', 'topmark',
+   'typea', 'strcthgt_ft', 'bsystem', 'shape', 'shapecol', 'rreflect',
+   'fsignal', 'source', 'error'
 );
 
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
@@ -902,7 +903,14 @@ for my $lgt (@lbuf)
 }
 
 pprogress "\n$lightcnt lights processed.\n";
+
 pprogress "\n----- PASS 3 -----\n";
+
+# This pass refines attributes by either splitting them into further tags like
+# radar reflectors, racons, and fog signals. It also tries to detect the type
+# of seamark (buoy, beacon, vessel,...) and finds shapes and colors of their
+# body.
+
 $lightcnt = 0;
 
 my %lightnr;
@@ -950,7 +958,6 @@ for my $lgt (@lbuf)
 
    # remove "<br>" from remarks
    $lgt->{'rem'} =~ s/<br>//g;
-   $lgt->{'racon'} =~ s/<br>//g;
 
    # try to detect sectors
    my $sec = $lgt->{'rem'};
@@ -1237,6 +1244,20 @@ for my $lgt (@lbuf)
          }
       }
    }
+
+   if ($lgt->{'racon'})
+   {
+      $lgt->{'racon'} =~ s/<br>//g;
+      $lgt->{'racon'} =~ s/$SPACES//g;
+      if ($lgt->{'racon'} =~ m/<b>([A-Z]+)\(/)
+      {
+         $lgt->{'racon_grp'} = $1;
+      }
+      if ($lgt->{'racon'} =~ m/period([0-9]+)s/)
+      {
+         $lgt->{'racon_period'} = $1;
+      }
+   }
 }
 
 pprogress "\n$lightcnt lights processed.\n$scolcnt shape colors found.\n";
@@ -1415,7 +1436,7 @@ pprogress "\nuslcnt = $uslcnt\nintcnt = $intcnt\nunmatch = $unmatch\n";
 
 pprogress "\n----- PASS 5 -----\nPostprocessing of lights and index matching.\n";
 
-# This run tries to compares the index of the LoL to the lights stanzas. It
+# This run tries to compare the index of the LoL to the lights stanzas. It
 # Further creates the full name of light by checking leading dashes.
 
 $lightcnt = 0;

@@ -107,6 +107,7 @@ while (<STDIN>)
    $val{'lond'} = 0.0 unless $val{'lond'};
    $val{'dir'} = 'NULL' if $val{'dir'} eq "";
    $val{'dirdist'} = 'NULL' if $val{'dirdist'} eq "";
+   $val{'racon_period'} = 0 unless $val{'racon_period'};
 
    undef $char;
    undef $group;
@@ -124,7 +125,7 @@ while (<STDIN>)
    my $fsignal = $val{'fsignal'} ? "'$val{'fsignal'}'" : 'NULL';
 
    #$topm = $val{'topmark'} ? 1 : 0;
-   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'char'}','$char','$group','$val{'mpos'}',$val{'period'},$val{'multi'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'rem'}',$val{'dir'},$val{'dirdist'},$leading";
+   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'char'}','$char','$group','$val{'mpos'}',$val{'period'},$val{'multi'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'racon_grp'}',$val{'racon_period'},'$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'rem'}',$val{'dir'},$val{'dirdist'},$leading";
 
    print ");\n";
 
