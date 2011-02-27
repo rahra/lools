@@ -23,6 +23,8 @@
 use strict;
 use DBI;
 
+my $where_cli = shift;
+
 # read database configuration
 my %dbconf = ('name' => "db.conf");
 open DBCONF, $dbconf{'name'} or die "*** cannot open file $dbconf{'name'}!\n";
@@ -42,9 +44,18 @@ my $dbh = DBI->connect($dsn, $dbconf{'MYSQL_USER'}, $dbconf{'MYSQL_PASS'}, {Rais
 my $pub_nr = `if test -e NR ; then cat NR ; fi`;
 $pub_nr =~ s/[^0-9]//g;
 print STDERR "Generating OSM for Pub. $pub_nr\n";
-my $where = "WHERE usl_list='$pub_nr'" if $pub_nr;
+
+# compile WHERE condition
+my $where = "WHERE " if $pub_nr || $where_cli;
+$where .= "usl_list='$pub_nr'" if $pub_nr;
+$where .= " AND " if $pub_nr && $where_cli;
+$where .= $where_cli;
+print STDERR "SQL condition: '$where'\n";
+
+# execute SQL statement
 my $sth = $dbh->prepare("SELECT * FROM lights $where");
 $sth->execute();
+my $light_cnt = $sth->rows;
 
 print "<?xml version='1.0' encoding='UTF-8'?>\n\n<!--\n";
 my $date = `date`;
@@ -253,4 +264,5 @@ print "</osm>\n";
 
 $dbh->disconnect();
 
+print STDERR "$light_cnt lights exported.\n";
 
