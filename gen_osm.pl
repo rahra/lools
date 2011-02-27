@@ -236,6 +236,13 @@ while (my $ref = $sth->fetchrow_hashref())
 
    print "      <tag k='seamark:radar_reflector' v='yes' />\n" if $ref->{'radar_reflector'};
 
+   if ($ref->{'racon'})
+   {
+      print "      <tag k='seamark:radar_transponder:category' v='racon' />\n";
+      print "      <tag k='seamark:radar_transponder:group' v='$ref->{'racon_grp'}' />\n" if $ref->{'racon_grp'};
+      print "      <tag k='seamark:radar_transponder:period' v='$ref->{'racon_period'}' />\n" if $ref->{'racon_period'} > 0;
+   }
+
    print "      <tag k='seamark:fog_signal:category' v='$ref->{'fsignal'}' />\n" if $ref->{'fsignal'};
 
    print "   </node>\n";
