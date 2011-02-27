@@ -65,7 +65,6 @@ print "OSM file generated at $date.\nUse at your own risk.\n";
 #system 'svn --verbose ls';
 print "-->\n\n<osm version='0.6' generator='lol_gen_osm'>\n";
 
-my $id = 0;
 while (my $ref = $sth->fetchrow_hashref())
 {
    if ($ref->{'error'} =~ /position/)
@@ -87,8 +86,7 @@ while (my $ref = $sth->fetchrow_hashref())
       }
    }
 
-   $id--;
-   print "   <node id='$id' action='modify' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
+   print "   <node id='$ref->{'osm_id'}' action='modify' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
 
    $ref->{'name'} =~ s/'/&apos;/g;
    $ref->{'name'} =~ s/<.*?>//g;
@@ -149,11 +147,14 @@ while (my $ref = $sth->fetchrow_hashref())
       print "      <tag k='seamark:light:category' v='leading;upper' />\n";
       print "      <tag k='seamark:light:orientation' v='$ref->{'dir'}' />\n" if $ref->{'dir'};
    }
-   if ($ref->{'sequence'})
-   {
-      print "      <tag k='seamark:light:sequence' v='$ref->{'sequence'}' />\n";
-   }
 
+   print "      <tag k='seamark:light:sequence' v='$ref->{'sequence'}' />\n" if $ref->{'sequence'};
+   if ($ref->{'remarks'})
+   {
+      $ref->{'remarks'} =~ s/<.*?>//g;
+      $ref->{'remarks'} =~ s/'|′/´/g;
+      print "      <tag k='seamark:light:inform' v='$ref->{'remarks'}' />\n";
+   }
 
    my $sti = $dbh->prepare("SELECT * FROM sectors WHERE usl_list='$ref->{'usl_list'}' AND usl_nr='$ref->{'usl_nr'}' AND usl_subnr='$ref->{'usl_subnr'}'");
    $sti->execute();
@@ -255,6 +256,7 @@ while (my $ref = $sth->fetchrow_hashref())
    }
 
    print "      <tag k='seamark:fog_signal:category' v='$ref->{'fsignal'}' />\n" if $ref->{'fsignal'};
+   print "      <tag k='seamark:landmark:height' v='$ref->{'height_landm'}' />\n" if $ref->{'height_landm'} > 0;
 
    print "   </node>\n";
 }

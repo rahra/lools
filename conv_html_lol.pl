@@ -78,8 +78,8 @@ my @keys = (
    'lat', 'lon', 'latd', 'lond', 'char', 'altchar', 'multi', 'mpos', 'period',
    'sequence', 'height_ft', 'height_m', 'range', 'struct', 'rem', 'sector',
    'racon', 'racon_grp', 'racon_period', 'altlight', 'type', 'topmark',
-   'typea', 'strcthgt_ft', 'bsystem', 'shape', 'shapecol', 'rreflect',
-   'fsignal', 'source', 'error'
+   'typea', 'bsystem', 'shape', 'shapecol', 'rreflect',
+   'fsignal', 'source', 'error', 'height_landm'
 );
 
 my $COLORS = "W|R|G|Y|Bu|Or|Vi";
@@ -212,7 +212,7 @@ while (<STDIN>)
       {
          $pub_nr = $1;
          `echo NR=$pub_nr > NR`;
-         $source = "US NGA. List of Lights, Pub. $pub_nr. $source.";
+         $source = "US NGA Pub. $pub_nr. $source.";
          pprogress "$source\n";
       }
 
@@ -959,6 +959,17 @@ for my $lgt (@lbuf)
    # remove "<br>" from remarks
    $lgt->{'rem'} =~ s/<br>//g;
 
+   if ($lgt->{'rem'})
+   {
+      my $rr = $lgt->{'rem'};
+      $rr =~ s/<.*?>//g;
+      unless ($rr =~ m/\.($SPACES)*$/)
+      {
+         $lgt->{'error'} .= ',' if $lgt->{'error'};
+         $lgt->{'error'} .= 'rem_incomplete';
+      }
+   }
+
    # try to detect sectors
    my $sec = $lgt->{'rem'};
    $sec =~ s/$SPACES//g;
@@ -1064,7 +1075,7 @@ for my $lgt (@lbuf)
 
    if ($lgt->{'struct'} =~ /;($SPACES)([0-9]+)\./)
    {
-      $lgt->{'strcthgt_ft'} = $2;
+      $lgt->{'height_landm'} = $2;
    }
 
    if ($lgt->{'height_m'} && $lgt->{'height_ft'})

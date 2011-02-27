@@ -22,6 +22,7 @@
 
 use strict;
 use feature ":5.10";
+use Digest::SHA1 qw(sha1);
 
 #my $pub_nr = shift;
 my $pub_nr = `cat NR`;
@@ -97,6 +98,8 @@ while (<STDIN>)
       print "'u','$val{'usl_list'}-$uslnr','$uslsubnr',";
    }
 
+   my $osm_id = unpack("N", sha1($val{'usl_list'}, $val{'uslnr'})) % ((1 << 31) - 1);
+
    # set some missing default values if missing
    $val{'multi'} = 1 unless $val{'multi'};
    $val{'period'} = 0 unless $val{'period'};
@@ -108,6 +111,7 @@ while (<STDIN>)
    $val{'dir'} = 'NULL' if $val{'dir'} eq "";
    $val{'dirdist'} = 'NULL' if $val{'dirdist'} eq "";
    $val{'racon_period'} = 0 unless $val{'racon_period'};
+   $val{'height_landm'} = 0 unless $val{'height_landm'};
 
    undef $char;
    undef $group;
@@ -125,7 +129,7 @@ while (<STDIN>)
    my $fsignal = $val{'fsignal'} ? "'$val{'fsignal'}'" : 'NULL';
 
    #$topm = $val{'topmark'} ? 1 : 0;
-   print "'$val{'usl_list'}',$uslnr,'$uslsubnr','$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'char'}','$char','$group','$val{'mpos'}',$val{'period'},$val{'multi'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'racon_grp'}',$val{'racon_period'},'$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'rem'}',$val{'dir'},$val{'dirdist'},$leading";
+   print "'$val{'usl_list'}',$uslnr,'$uslsubnr',-$osm_id,'$val{'section'}','$val{'name'}','$val{'longname'}',$val{'latd'},$val{'lond'},'$val{'char'}','$char','$group','$val{'mpos'}',$val{'period'},$val{'multi'},$val{'height_ft'},$val{'height_m'},'$val{'sequence'}','','',0,$val{'rreflect'},'$val{'topmark'}',0,'$val{'racon'}','$val{'racon_grp'}',$val{'racon_period'},'$val{'struct'}','$val{'type'}','$val{'typea'}','$val{'bsystem'}','$val{'shape'}','$val{'shapecol'}',$fsignal,'$val{'error'}','$val{'source'}','$val{'rem'}',$val{'dir'},$val{'dirdist'},$leading,$val{'height_landm'}";
 
    print ");\n";
 
