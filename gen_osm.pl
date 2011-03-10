@@ -65,6 +65,8 @@ print "OSM file generated at $date.\nUse at your own risk.\n";
 #system 'svn --verbose ls';
 print "-->\n\n<osm version='0.6' generator='lol_gen_osm'>\n";
 
+my $osm_id = 0;
+
 while (my $ref = $sth->fetchrow_hashref())
 {
    if ($ref->{'error'} =~ /position/)
@@ -86,7 +88,10 @@ while (my $ref = $sth->fetchrow_hashref())
       }
    }
 
-   print "   <node id='$ref->{'osm_id'}' action='modify' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
+   $osm_id = $ref->{'osm_id'};
+   # $osm_id--;
+   # my $version = $ref->{'version'};
+   print "   <node id='$osm_id' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
 
    $ref->{'name'} =~ s/'/&apos;/g;
    $ref->{'name'} =~ s/<.*?>//g;
@@ -112,6 +117,15 @@ while (my $ref = $sth->fetchrow_hashref())
    else
    {
       print "      <tag k='seamark:light:ref' v='$intnr' />\n";
+   }
+   
+   if ($ref->{'error'})
+   {
+      $ref->{'error'} = 'please_fix_position,' . $ref->{'error'};
+   }
+   else
+   {
+      $ref->{'error'} = 'please_fix_position';
    }
    print "      <tag k='seamark:fixme' v='$ref->{'error'}' />\n" if $ref->{'error'};
 
