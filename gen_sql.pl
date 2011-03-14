@@ -98,7 +98,7 @@ while (<STDIN>)
       print "'u','$val{'usl_list'}-$uslnr','$uslsubnr',";
    }
 
-   my $osm_id = unpack("N", sha1($val{'usl_list'}, $val{'uslnr'})) % ((1 << 31) - 1);
+   my $osm_id = unpack("N", sha1($val{'usl_list'}, $val{'uslnr'}, $uslsubnr)) % ((1 << 31) - 1);
 
    # set some missing default values if missing
    $val{'multi'} = 1 unless $val{'multi'};

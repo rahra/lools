@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Feb 14, 2011 at 10:44 PM
+-- Generation Time: Mar 14, 2011 at 03:32 PM
 -- Server version: 5.1.49
 -- PHP Version: 5.3.3-7
 
@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `usl_list` varchar(32) NOT NULL,
   `usl_nr` int(11) NOT NULL,
   `usl_subnr` char(3) NOT NULL,
+  `osm_id` int(11) NOT NULL DEFAULT '-1',
   `section_name` varchar(256) NOT NULL,
   `name` varchar(256) NOT NULL,
   `longname` varchar(256) NOT NULL,
@@ -55,6 +56,8 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `topmark` enum('2cones_pointup','2cones_base2base','2cones_pointdown','2cones_point2point','sphere','2spheres','xshape','cube','cone_pointup','yes','') NOT NULL DEFAULT '',
   `av_light` tinyint(1) NOT NULL DEFAULT '0',
   `racon` varchar(256) DEFAULT NULL,
+  `racon_grp` varchar(5) NOT NULL,
+  `racon_period` int(11) DEFAULT NULL,
   `structure` varchar(256) NOT NULL,
   `type` enum('lateral:starboard','lateral:port','lateral:preferred_channel_starboard','lateral:preferred_channel_port','cardinal:north','cardinal:east','cardinal:south','cardinal:west','safe_water','isolated_danger','special_purpose','major','') NOT NULL,
   `typea` enum('major','buoy','beacon','minor','float','vessel') NOT NULL,
@@ -68,8 +71,10 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `dir` int(6) DEFAULT NULL,
   `dirdist` int(6) DEFAULT NULL,
   `leading` enum('front','rear') DEFAULT NULL,
+  `height_landm` int(5) NOT NULL,
   PRIMARY KEY (`usl_list`,`usl_nr`,`usl_subnr`),
-  UNIQUE KEY `int_chr` (`int_chr`,`int_nr`,`int_subnr`)
+  UNIQUE KEY `int_chr` (`int_chr`,`int_nr`,`int_subnr`),
+  UNIQUE KEY `osm_id` (`osm_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
