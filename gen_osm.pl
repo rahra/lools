@@ -96,6 +96,7 @@ while (my $ref = $sth->fetchrow_hashref())
    $ref->{'name'} =~ s/'/&apos;/g;
    $ref->{'name'} =~ s/<.*?>//g;
    print "      <tag k='seamark:name' v='$ref->{'name'}' />\n";
+   #print "      <tag k='name' v='$ref->{'name'}' />\n" if $ref->{'typea'} eq 'major';
    if ($ref->{'longname'} ne $ref->{'name'})
    {
       $ref->{'longname'} =~ s/'/&apos;/g;
@@ -108,7 +109,7 @@ while (my $ref = $sth->fetchrow_hashref())
    if ($ref->{'int_subnr'}) { $intnr = "$ref->{'int_chr'} $ref->{'int_nr'}.$ref->{'int_subnr'}"; }
    else { $intnr = "$ref->{'int_chr'} $ref->{'int_nr'}"; }
 
-   print "      <tag k='ref' v='$intnr' />\n";
+   #print "      <tag k='ref' v='$intnr' />\n";
    print "      <tag k='source' v='$ref->{'source'}' />\n";
    if ($ref->{'int_chr'} eq "USNGA" )
    {
