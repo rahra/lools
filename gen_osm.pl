@@ -69,6 +69,9 @@ my $osm_id = 0;
 
 while (my $ref = $sth->fetchrow_hashref())
 {
+   # remove all leading and trailing white spaces from attributes
+   foreach (keys %$ref) { $ref->{$_} =~ s/^\s*(.*?)\s*$/\1/; }
+
    if ($ref->{'error'} =~ /position/)
    {
       print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
