@@ -484,9 +484,11 @@ pprogress "\n$lightcnt lights detected.\n";
 pprogress "\n----- PASS 2 -----\n";
 
 $lightcnt = 0;
+my $i = 0;
 for my $lgt (@lbuf)
 {
-   dprint "/***** $lgt->{'intnr'} ***************/\n";
+   if ($lgt->{'intnr'}) { dprint "/***** $lgt->{'intnr'} ***************/\n"; }
+   else { dprint "/***** u$lgt->{'uslnr'} ***************/\n"; }
 
    pgrs_char unless $lightcnt % 10;
    pprogress "   [light = $lightcnt]" unless $lightcnt % 20;
@@ -496,7 +498,8 @@ for my $lgt (@lbuf)
    $next_line = 0;
    $prev_line = 0;
 
-   for (my $i = $lgt->{'lineno'}; $i < $lgt->{'lineno'} + $lgt->{'linecnt'}; $i++)
+   dprint "$i: ($next_line,$prev_line,$structbreak) $fbuf[$i]\n";
+   for ($i = $lgt->{'lineno'}; $i < $lgt->{'lineno'} + $lgt->{'linecnt'}; $i++)
    {
       next unless $fbuf[$i];
       dprint "$i: ($next_line,$prev_line,$structbreak) $fbuf[$i]\n";
@@ -919,7 +922,8 @@ my $scolcnt = 0;
 
 for my $lgt (@lbuf)
 {
-   dprint "/***** $lgt->{'intnr'} ***************/\n";
+   if ($lgt->{'intnr'}) { dprint "/***** $lgt->{'intnr'} ***************/\n"; }
+   else { dprint "/***** u$lgt->{'uslnr'} ***************/\n"; }
 
    pgrs_char unless $lightcnt % 10;
    pprogress "   [light = $lightcnt]" unless $lightcnt % 20;

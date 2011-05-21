@@ -80,13 +80,23 @@ while (my $ref = $sth->fetchrow_hashref())
       next;
    }
 
-   if ($ref->{'name'} =~ /RACON\.$/)
+   if ($ref->{'name'} =~ /RACON(\.)?$/)
    {
-      if ($ref->{'character_full'} =~ /^[A-Z0-9]{1,2}\(.*?\)$/)
+      if ($1)
       {
-         print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
+         if ($ref->{'character_full'} =~ /^[A-Z0-9]{1,2}\(.*?\)$/)
+         {
+            print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
+            print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
+            print STDERR ", RACON.\n";
+            next;
+         }
+      }
+      else
+      {
+         print STDERR "*** check $ref->{'int_chr'} $ref->{'int_nr'}";
          print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
-         print STDERR ", RACON.\n";
+         print STDERR ", RACON[^\\.]\n";
          next;
       }
    }
