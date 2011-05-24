@@ -144,11 +144,11 @@ while (my $ref = $sth->fetchrow_hashref())
    print "      <tag k='seamark:fixme' v='$ref->{'error'}' />\n" if $ref->{'error'};
 
    $ref->{'character'} =~ s/\.//g;
-   print "      <tag k='seamark:light:character' v='$ref->{'character'}' />\n";
+   print "      <tag k='seamark:light:character' v='$ref->{'character'}' />\n" if $ref->{'character'};
 
    if ($ref->{'group'} ne "1")
    {
-      print "      <tag k='seamark:light:group' v='$ref->{'group'}' />\n";
+      print "      <tag k='seamark:light:group' v='$ref->{'group'}' />\n" if $ref->{'group'};
    }
    if ($ref->{'period'} > 0)
    {

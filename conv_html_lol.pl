@@ -73,7 +73,7 @@ my $next_line = 0;
 my $prev_line = 0;
 
 my @keys = (
-   'lineno', 'area', 'section', 'intnr', 'usl_list', 'uslnr', 'cat', 'dashes',
+   'lineno', 'area', 'sec_nr', 'section', 'intnr', 'usl_list', 'uslnr', 'cat', 'dashes',
    'name', 'longname', 'indname', 'n_inc', 'front', 'rear', 'dirdist', 'dir',
    'lat', 'lon', 'latd', 'lond', 'char', 'altchar', 'multi', 'mpos', 'period',
    'sequence', 'height_ft', 'height_m', 'range', 'struct', 'rem', 'sector',
@@ -187,6 +187,7 @@ my $no_detect = 0;
 my $start = 0;
 my $areaguess;
 my $area;
+my $sec_nr = 0;
 #my $prev_area;
 
 while (<STDIN>)
@@ -219,8 +220,19 @@ while (<STDIN>)
       if (/Section 1</)
       {
          $start++;
-         pprogress "\nbeginning at line $lineno\n" if $start >= 2;
+         if ($start >= 2)
+         {
+            pprogress "\nbeginning at line $lineno\n";
+            $sec_nr = 1;
+         }
       }
+      next;
+   }
+
+   # detect section number
+   if (/Section ([0-9]+)</)
+   {
+      $sec_nr = $1;
       next;
    }
 
@@ -408,6 +420,7 @@ while (<STDIN>)
             $lbuf[@lbuf - 1]->{'rear'} = $light{'uslnr'};
          }
          $light{'area'} = $area;
+         $light{'sec_nr'} = $sec_nr;
          $next_line = 'NL_NAT';
          next;
       }
