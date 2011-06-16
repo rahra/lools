@@ -181,7 +181,7 @@ while (my $ref = $sth->fetchrow_hashref())
    {
       $ref->{'remarks'} =~ s/<.*?>//g;
       $ref->{'remarks'} =~ s/'|′/´/g;
-      print "      <tag k='seamark:light:inform' v='$ref->{'remarks'}' />\n";
+      print "      <tag k='seamark:light:information' v='$ref->{'remarks'}' />\n";
    }
 
    my $sti = $dbh->prepare("SELECT * FROM sectors WHERE usl_list='$ref->{'usl_list'}' AND usl_nr='$ref->{'usl_nr'}' AND usl_subnr='$ref->{'usl_subnr'}'");
@@ -239,7 +239,7 @@ while (my $ref = $sth->fetchrow_hashref())
       print "      <tag k='seamark:type' v='$stype' />\n";
       print "         <tag k='seamark:$stype:category' v='$1' />\n" if $1;
       # FIXME: buoyage system should have a defined tag.
-      print "         <tag k='seamark:$stype:marsys' v='$ref->{'bsystem'}' />\n" if $ref->{'bsystem'};
+      print "         <tag k='seamark:$stype:system' v='$ref->{'bsystem'}' />\n" if $ref->{'bsystem'};
       print "      <tag k='seamark:$stype:shape' v='$ref->{'shape'}' />\n" if $ref->{'shape'};
 
       if ($ref->{'shapecol'})

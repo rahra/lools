@@ -3,9 +3,9 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 14, 2011 at 03:32 PM
+-- Generation Time: Jun 16, 2011 at 11:26 AM
 -- Server version: 5.1.49
--- PHP Version: 5.3.3-7
+-- PHP Version: 5.3.3-7+squeeze1
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `usl_nr` int(11) NOT NULL,
   `usl_subnr` char(3) NOT NULL,
   `osm_id` int(11) NOT NULL DEFAULT '-1',
+  `sec_nr` int(11) NOT NULL,
   `section_name` varchar(256) NOT NULL,
   `name` varchar(256) NOT NULL,
   `longname` varchar(256) NOT NULL,
@@ -61,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `structure` varchar(256) NOT NULL,
   `type` enum('lateral:starboard','lateral:port','lateral:preferred_channel_starboard','lateral:preferred_channel_port','cardinal:north','cardinal:east','cardinal:south','cardinal:west','safe_water','isolated_danger','special_purpose','major','') NOT NULL,
   `typea` enum('major','buoy','beacon','minor','float','vessel') NOT NULL,
-  `bsystem` enum('A','B','') NOT NULL,
+  `bsystem` enum('iala-a','iala-b','none','other') NOT NULL,
   `shape` varchar(32) NOT NULL,
   `shapecol` varchar(256) NOT NULL,
   `fsignal` enum('horn','siren','whistle','bell','diaphone','gong','explosive') DEFAULT NULL,
@@ -74,7 +75,8 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `height_landm` int(5) NOT NULL,
   PRIMARY KEY (`usl_list`,`usl_nr`,`usl_subnr`),
   UNIQUE KEY `int_chr` (`int_chr`,`int_nr`,`int_subnr`),
-  UNIQUE KEY `osm_id` (`osm_id`)
+  UNIQUE KEY `osm_id` (`osm_id`),
+  KEY `sec_nr` (`sec_nr`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
