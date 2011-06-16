@@ -16,7 +16,7 @@
 # */
 
 SVNVER=$(shell svnversion | tr -d -c '[:digit:]')
-DISTFILES=README COPYING Makefile Makefile.cr db.conf list_of_lights.sql conv_html_lol.pl gen_altchar.pl gen_osm.pl gen_sql.pl gen_xml.pl
+DISTFILES=README COPYING Makefile Makefile.cr db.conf list_of_lights.sql conv_html_lol.pl gen_altchar.pl gen_osm.pl gen_sql.pl gen_xml.pl old_new.pl
 DISTDST=lools-r$(SVNVER)
 
 all:
