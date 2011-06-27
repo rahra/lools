@@ -56,6 +56,7 @@ print STDERR "SQL condition: '$where'\n";
 my $sth = $dbh->prepare("SELECT * FROM lights $where");
 $sth->execute();
 my $light_cnt = $sth->rows;
+my $light_skip = 0;
 
 print "<?xml version='1.0' encoding='UTF-8'?>\n\n<!--\n";
 my $date = `date`;
@@ -77,6 +78,7 @@ while (my $ref = $sth->fetchrow_hashref())
       print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
       print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
       print STDERR " due to position error.\n";
+      $light_cnt--; $light_skip++;
       next;
    }
 
@@ -89,6 +91,7 @@ while (my $ref = $sth->fetchrow_hashref())
             print STDERR "skipping $ref->{'int_chr'} $ref->{'int_nr'}";
             print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
             print STDERR ", RACON.\n";
+            $light_cnt--; $light_skip++;
             next;
          }
       }
@@ -97,6 +100,7 @@ while (my $ref = $sth->fetchrow_hashref())
          print STDERR "*** check $ref->{'int_chr'} $ref->{'int_nr'}";
          print STDERR ".$ref->{'int_subnr'}" if $ref->{'int_subnr'};
          print STDERR ", RACON[^\\.]\n";
+         $light_cnt--; $light_skip++;
          next;
       }
    }
@@ -294,5 +298,5 @@ print "</osm>\n";
 
 $dbh->disconnect();
 
-print STDERR "$light_cnt lights exported.\n";
+print STDERR "$light_cnt lights exported.\n$light_skip lights skipped.\n";
 
