@@ -107,8 +107,9 @@ while (my $ref = $sth->fetchrow_hashref())
 
    $osm_id = $ref->{'osm_id'};
    # $osm_id--;
-   # my $version = $ref->{'version'};
-   print "   <node id='$osm_id' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'>\n";
+   my $version;
+  $version = " version='$ref->{'version'}'" if $osm_id > 0;
+   print "   <node id='$osm_id' visible='true' lat='$ref->{'lat'}' lon='$ref->{'lon'}'$version>\n";
 
    $ref->{'name'} =~ s/'/&apos;/g;
    $ref->{'name'} =~ s/<.*?>//g;
@@ -172,11 +173,11 @@ while (my $ref = $sth->fetchrow_hashref())
    }
    elsif ($ref->{'leading'} eq 'front')
    {
-      print "      <tag k='seamark:light:category' v='leading;lower' />\n";
+      print "      <tag k='seamark:light:category' v='lower' />\n";
    }
    elsif ($ref->{'leading'} eq 'rear')
    {
-      print "      <tag k='seamark:light:category' v='leading;upper' />\n";
+      print "      <tag k='seamark:light:category' v='upper' />\n";
       print "      <tag k='seamark:light:orientation' v='$ref->{'dir'}' />\n" if $ref->{'dir'};
    }
 
@@ -257,11 +258,11 @@ while (my $ref = $sth->fetchrow_hashref())
          {
             if ($ref->{'type'} =~ /cardinal|preferred|isolated/)
             {
-               print "      <tag k='seamark:$stype:colour_pattern' v='horizontal_stripes' />\n";
+               print "      <tag k='seamark:$stype:colour_pattern' v='horizontal' />\n";
             }
             elsif ($ref->{'type'} =~ /safe_water/)
             {
-               print "      <tag k='seamark:$stype:colour_pattern' v='vertical_stripes' />\n";
+               print "      <tag k='seamark:$stype:colour_pattern' v='vertical' />\n";
             }
          }
       }
