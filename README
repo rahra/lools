@@ -49,7 +49,9 @@ raw XML) file contains the same inforamtion and can be loaded into josm.
 
 2) To generate a world OSM file containing all lights just run the perl script
 `./gen_osm.pl > world.osm`. It reads all data out of the mysql and converts
-it into an OSM file.
+it into an OSM file. It is possible to give a WHERE condition to gen_osm.pl to
+restrict selection of objects, for example
+./gen_osm.pl 'usl_list=113 and sec_nr=5'.
 
 Please note that the CSV and XML file are complete but the OSM and the SQL are
 currently not. They contain all lights but not all data that was found for each
