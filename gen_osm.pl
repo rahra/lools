@@ -289,7 +289,12 @@ while (my $ref = $sth->fetchrow_hashref())
    }
 
    print "      <tag k='seamark:fog_signal:category' v='$ref->{'fsignal'}' />\n" if $ref->{'fsignal'};
-   print "      <tag k='seamark:landmark:height' v='$ref->{'height_landm'}' />\n" if $ref->{'height_landm'} > 0;
+   if ($ref->{'height_landm'} > 0)
+   {
+      $ref->{'height_landm'} /= 3.28095;
+      my $lmh = sprintf("%.0f", $ref->{'height_landm'});
+      print "      <tag k='seamark:landmark:height' v='$lmh' />\n";
+   }
 
    print "   </node>\n";
 }
