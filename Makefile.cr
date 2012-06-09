@@ -34,7 +34,7 @@ $(TARGET).html: $(TARGET).pdf
 	pdftohtml -i -noframes $(TARGET).pdf > /dev/null 2>> $(LOGFILE)
 
 $(TARGET)_.html: $(TARGET).html
-	perl -pe 's/(<br>)(<\/[bi]>)/\2\1/g;s/<br>(.*?)<br>/<br>\n\1<br>\n/g;s/^(&nbsp;| )+//g;' < $(TARGET).html | perl -pe 's/^(&nbsp;| )+//g;s/^\n//;' > $(TARGET)_.html 2>> $(LOGFILE)
+	perl -pe 's/(<br>)(<\/[bi]>)/\2\1/g;s/<br>(.*?)<br>/<br>\n\1<br>\n/g;s/^(&nbsp;| )+//g;s/&nbsp;&nbsp;((([0-9]{1,3})°&nbsp;([0-9]{2,2}\.[0-9])´&nbsp;([NS]))&nbsp;(<b>([^<]*)<\/b>)(.*?)<br>)/<br>\n\1/;s/-&nbsp;-/--/' < $(TARGET).html | perl -pe 's/^(&nbsp;| )+//g;s/^\n//;' > $(TARGET)_.html 2>> $(LOGFILE)
 
 $(TARGET)_.csv: $(TARGET)_.html
 	$(BINPATH)/conv_html_lol.pl < $(TARGET)_.html > $(TARGET)_.csv

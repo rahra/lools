@@ -22,7 +22,7 @@
 
 use strict;
 use feature ":5.10";
-use Digest::SHA1 qw(sha1);
+use Digest::SHA qw(sha1);
 
 #my $pub_nr = shift;
 my $pub_nr = `cat NR`;
