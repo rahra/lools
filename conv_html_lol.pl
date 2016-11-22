@@ -59,8 +59,8 @@ my $source;
 my @pgrsc = ("-", "/", "|", "\\");
 my $pgrscnt = 0;
 
-my $NBSP = '&nbsp;';
-my $SPACES = "$NBSP| ";
+my $NBSP = " ";
+my $SPACES = " ";
 
 my $lineno = 0;
 my $lightcnt = 0;
@@ -246,7 +246,7 @@ while (<STDIN>)
             $next_line = 0;
 
             # detect latitude/character line.
-            if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*)<\/b>)(.*?)<br>/)
+            if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*)<\/b>)(.*?)<br\/>/)
             {
                $prev_line = "LAT";
                NL_NAT:
@@ -276,12 +276,12 @@ while (<STDIN>)
             }
             # same pattern as above but a little bit weaker
             # NOTE: pattern should be obsolete
-            #elsif (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*))<br>/)
+            #elsif (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))$NBSP(<b>([^<]*))<br\/>/)
             #{
             #   $prev_line = "LAT_WEAK";
             #   goto NL_NAT;
             #}
-            elsif (/(0°($NBSP)00.0´)<br>/)
+            elsif (/(0°($NBSP)00.0´)<br\/>/)
             {
                $prev_line = "LAT0";
                $light{'lat'} = $1;
@@ -294,7 +294,7 @@ while (<STDIN>)
          case 'NL_CHAR'
          {
             $next_line = 0;
-            if (/<b>([^<]*)<\/b>(\([^\)]*\))?<br>/)
+            if (/<b>([^<]*)<\/b>(\([^\)]*\))?<br\/>/)
             {
                $prev_line = "CHAR";
                $light{'char'} = $1;
@@ -307,7 +307,7 @@ while (<STDIN>)
          {
             $next_line = 0;
 
-            if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br>/)
+            if (/(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br\/>/)
             {
                $prev_line = "LON";
                $light{'lon'} = $1;
@@ -316,7 +316,7 @@ while (<STDIN>)
             }
             else
             {
-               if (/([^<]*?(\.)?)<br>$/)
+               if (/([^<]*?(\.)?)<br\/>$/)
                {
                   $prev_line = "NAME";
                   $light{'name'} .= ' ' if $light{'name'};
@@ -341,7 +341,7 @@ while (<STDIN>)
    }
 
    # detect page break
-   if (/^<hr>$/)
+   if (/^<hr\/>$/)
    {
       $prev_line = 0;
       $next_line = 0;
@@ -361,10 +361,10 @@ while (<STDIN>)
    }
 
    # detect US NGA number
-   if (/^(([0-9]+)(\.[0-9]+)?)$NBSP(\-?(<(.)>|([A-Z“])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br>$/)
+   if (/^(([0-9]+)(\.[0-9]+)?)$NBSP+(\-?(<(.)>|([A-Z“])|-)([^<]*?)(\.)?(<\/.>)?(.*?)(\.)?)<br\/>$/)
    {
       my $c = $lineno - $light{'lineno'};
-      # Stanzas should have at least a view lines. 3 is good value for at least
+      # Stanzas should have at least a few lines. 3 is good value for at least
       # Pub113-2009.
       if ($c < 3)
       {
@@ -380,6 +380,12 @@ while (<STDIN>)
       {
          $prev_line = 0;
          dprint "MATCHILL2 ($c) '$_'\n";
+      }
+      # this is a special rule for first light in Pub116.....
+      elsif ($pub_nr == 116 && $1 == 6)
+      {
+         $prev_line = 0;
+         dprint "MATCHILL_116 ($c) '$_'\n";
       }
       else
       {
@@ -427,7 +433,7 @@ while (<STDIN>)
    }
 
    # detect section
-   if (/(([\-]*)?[^:]*):<br>$/)
+   if (/(([\-]*)?[^:]*):<br\/>$/)
    {
       if ($prev_line eq "AREAGUESS") 
       { 
@@ -451,7 +457,7 @@ while (<STDIN>)
          next;
       }
 
-      if (!$light{'lon'} && /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br>/)
+      if (!$light{'lon'} && /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([EW]))<br\/>/)
       {
          $prev_line = "LON";
          $light{'lon'} = $1;
@@ -462,7 +468,7 @@ while (<STDIN>)
 
       if ($charbreak)
       {
-         if (/^([^(]*\))<br>/)
+         if (/^([^(]*\))<br\/>/)
          {
             $prev_line = "MPOS";
             $charbreak = 0;
@@ -474,7 +480,7 @@ while (<STDIN>)
 
    # try to detect area
    my $a = $_;
-   if ($a =~ /^<b>((&nbsp;|[A-Z ()-])*)<\/b><br>$/)
+   if ($a =~ /^<b>((&nbsp;|[A-Z ()-])*)<\/b><br\/>$/)
    { 
       $areaguess = $1; 
       $prev_line = "AREAGUESS";
@@ -533,7 +539,7 @@ for my $lgt (@lbuf)
       }
  
       # sometimes the name contains RACON
-      if ($fbuf[$i] =~ /^(.*?(.?)RACON\.)<br>$/)
+      if ($fbuf[$i] =~ /^(.*?(.?)RACON\.)<br\/>$/)
       {
          if ($2 ne "-")
          {
@@ -554,7 +560,7 @@ for my $lgt (@lbuf)
 
       # detect second light
       # FIXME: pattern does not work
-      if ($fbuf[$i] =~ /^<b>(([0-9] )?(Dir\.)?(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\.[^<]*)<\/b><br>/)
+      if ($fbuf[$i] =~ /^<b>(([0-9] )?(Dir\.)?(F|L\.Fl|Al\.Fl|Fl|Iso|Oc|V\.Q|I\.Q|U\.Q|Q|Mo)\.[^<]*)<\/b><br\/>/)
       {
          unless ($lgt->{'char'}) 
          { 
@@ -577,7 +583,7 @@ for my $lgt (@lbuf)
             case 'NL_RNGPRT_STRUCT'
             {
                $next_line = 0;
-               if ($fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br>/)
+               if ($fbuf[$i] =~ /^([0-9]+)(.*?(\.)?)<br\/>/)
                {
                   $lgt->{'range'} .= $1;
                   $lgt->{'struct'} .= $2;
@@ -594,14 +600,14 @@ for my $lgt (@lbuf)
             {
                $next_line = 0;
                # this line might be a color range
-               if ($fbuf[$i] =~ /^(($COLORS)\.)<br>/)
+               if ($fbuf[$i] =~ /^(($COLORS)\.)<br\/>/)
                {
                   $lgt->{'range'} .= ',' if $lgt->{'range'};
                   $lgt->{'range'} .= $1;
                   $prev_line = 'PL_RANGE_PART';
                   $next_line = 'NL_RNGPRT_STRUCT';
                }
-               elsif ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
+               elsif ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br\/>/)
                {
                   $lgt->{'range'} .= "," if $lgt->{'range'};
                   $lgt->{'range'} .= "$1. $4";
@@ -609,7 +615,7 @@ for my $lgt (@lbuf)
                }
                else
                {
-                  if ($fbuf[$i] =~ /^(.*([^A-Z]))$NBSP$NBSP(.*)<br>/)
+                  if ($fbuf[$i] =~ /^(.*([^A-Z]))$NBSP$NBSP(.*)<br\/>/)
                   {
                      $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
                      $lgt->{'struct'} .= $1;
@@ -618,7 +624,7 @@ for my $lgt (@lbuf)
                      $lgt->{'rem'} .= $3;
                      $prev_line = 'PL_REM';
                   }
-                  elsif ($fbuf[$i] =~ /^(.*?(\.)?)<br>$/)
+                  elsif ($fbuf[$i] =~ /^(.*?(\.)?)<br\/>$/)
                   {
                      $lgt->{'struct'} .= " " . $1;
                      $structbreak = 0 if $2;
@@ -629,12 +635,12 @@ for my $lgt (@lbuf)
             case 'NL_CRNG'
             {
                $next_line = 0;
-               if ($fbuf[$i] =~ /^([0-9]+)<br>/)
+               if ($fbuf[$i] =~ /^([0-9]+)<br\/>/)
                {
                   $lgt->{'range'} .= $1;
                   $prev_line = 'PL_CRNG';
                }
-               elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)($NBSP$NBSP(.*))?<br>/)
+               elsif ($fbuf[$i] =~ /^([0-9]+)($SPACES)(.*?(\.)?)($NBSP$NBSP(.*))?<br\/>/)
                {
                   $lgt->{'range'} .= $1;
                   $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
@@ -659,7 +665,7 @@ for my $lgt (@lbuf)
 
       unless ($lgt->{'height_ft'})
       {
-         if ($fbuf[$i] =~ /^([0-9]+)<br>$/)
+         if ($fbuf[$i] =~ /^([0-9]+)<br\/>$/)
          {
             $lgt->{'height_ft'} = $1;
             $fbuf[$i] = "";
@@ -674,7 +680,7 @@ for my $lgt (@lbuf)
 #         }
       }
 
-      if ($fbuf[$i] =~ /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))<br>/)
+      if ($fbuf[$i] =~ /^(([0-9]{1,3})°$NBSP([0-9]{2,2}\.[0-9])´$NBSP([NS]))<br\/>/)
       {
          unless ($lgt->{'lat'})
          {
@@ -687,7 +693,7 @@ for my $lgt (@lbuf)
          }
       }
 
-      if ($fbuf[$i] =~ /(0°($NBSP)00.0´)<br>/)
+      if ($fbuf[$i] =~ /(0°($NBSP)00.0´)<br\/>/)
       {
          unless ($lgt->{'lat'})
          {
@@ -707,7 +713,7 @@ for my $lgt (@lbuf)
          }
       }
 
-      if ($fbuf[$i] =~ /^(($COLORS)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?(.*?(\.)?)<br>/)
+      if ($fbuf[$i] =~ /^(($COLORS)\.$NBSP)?(<b>)?([0-9]+)$NBSP(<\/b>)?(.*?(\.)?)<br\/>/)
       {
          if ($lgt->{'struct'} && !$structbreak)
          {
@@ -752,7 +758,7 @@ for my $lgt (@lbuf)
          next;
       }
 
-      if ($fbuf[$i] =~ /^period ([0-9]+(\.[0-9])?)s<br>/)
+      if ($fbuf[$i] =~ /^period ([0-9]+(\.[0-9])?)s<br\/>/)
       {
          $lgt->{'period'} = $1;
          $fbuf[$i] = "";
@@ -777,7 +783,7 @@ for my $lgt (@lbuf)
          next;
       }
 
-      if ($fbuf[$i] =~ /^($COLORS)\.<br>/)
+      if ($fbuf[$i] =~ /^($COLORS)\.<br\/>/)
       {
          $lgt->{'range'} .= "," if $lgt->{'range'};
          $lgt->{'range'} .= "$1. ";
@@ -787,7 +793,7 @@ for my $lgt (@lbuf)
          next;
       }
 
-      if ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br>/)
+      if ($fbuf[$i] =~ /^($COLORS)\.($SPACES)(<b>)?([0-9]+)(<\/b>)?<br\/>/)
       {
          $lgt->{'range'} .= "," if $lgt->{'range'};
          $lgt->{'range'} .= "$1. $4";
@@ -797,7 +803,7 @@ for my $lgt (@lbuf)
  
       }
 
-      if ($fbuf[$i] =~ /((Helicopter platform\.($SPACES)?)<br>)/)
+      if ($fbuf[$i] =~ /((Helicopter platform\.($SPACES)?)<br\/>)/)
       {
          $lgt->{'struct'} .= $2;
          $fbuf[$i] =~ s/$1//;
@@ -807,7 +813,7 @@ for my $lgt (@lbuf)
 
       unless ($lgt->{'struct'})
       {
-         if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br>/)
+         if ($fbuf[$i] =~ /^([^<0-9][^<]*?(\.)?)<br\/>/)
          {
             my $struct = $1;
             my $break = $2;
@@ -841,7 +847,7 @@ for my $lgt (@lbuf)
 
      unless ($lgt->{'range'})
      {
-         if ($fbuf[$i] =~ /^([0-9]+)($SPACES)([A-Z].*(\.))<br>/)
+         if ($fbuf[$i] =~ /^([0-9]+)($SPACES)([A-Z].*(\.))<br\/>/)
          {
             $lgt->{'range'} = $1;
             $lgt->{'struct'} .= ' ' if $lgt->{'struct'};
@@ -851,7 +857,7 @@ for my $lgt (@lbuf)
             $prev_line = 'PL_STRUCT';
             next;
          }
-         if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br>/)
+         if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br\/>/)
          {
             if (!$lgt->{'struct'} || !$lgt->{'rem'})
             {
@@ -861,7 +867,7 @@ for my $lgt (@lbuf)
                next;
             }
          }
-         if ($fbuf[$i] =~ /^([0-9]+)<br>$/)
+         if ($fbuf[$i] =~ /^([0-9]+)<br\/>$/)
          {
             $lgt->{'range'} = $1;
             $fbuf[$i] = "";
@@ -872,7 +878,7 @@ for my $lgt (@lbuf)
  
       unless ($lgt->{'height_m'})
       {
-         if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br>/)
+         if ($fbuf[$i] =~ /^<b>([0-9]+)<\/b><br\/>/)
          {
             $lgt->{'height_m'} = $1;
             $fbuf[$i] = "";
@@ -893,7 +899,7 @@ for my $lgt (@lbuf)
 
       if ($structbreak)
       {
-         if ($fbuf[$i] =~ /^(.*; [0-9]+\.)(&nbsp;.*)<br>/)
+         if ($fbuf[$i] =~ /^(.*; [0-9]+\.)(&nbsp;.*)<br\/>/)
          {
             $lgt->{'struct'} .= " $1";
             $structbreak = 0;
@@ -903,7 +909,7 @@ for my $lgt (@lbuf)
          $fbuf[$i] = "";
          next;
          }
-         elsif ($fbuf[$i] =~ /^(.*?(\.)?)<br>/)
+         elsif ($fbuf[$i] =~ /^(.*?(\.)?)<br\/>/)
          {
             $lgt->{'struct'} .= " $1";
             $structbreak = 0 if $2;
@@ -950,14 +956,14 @@ for my $lgt (@lbuf)
       next unless $fbuf[$i];
       dprint "$i: $fbuf[$i]\n";
 
-      $fbuf[$i] =~ s/<br>//g;
+      $fbuf[$i] =~ s/<br\/>//g;
       unless ($lgt->{'name'} =~ /\.$/)
       {
          $lgt->{'name'} .= $fbuf[$i];
       }
       else
       {
-         $lgt->{'rem'} .= $fbuf[$i];
+         $lgt->{'rem'} .= $fbuf[$i] if length $fbuf[$i] < 40;
       }
       $fbuf[$i] = "";
    }
@@ -973,8 +979,8 @@ for my $lgt (@lbuf)
       $lgt->{'error'} .= 'name_incomplete';
    }
 
-   # remove "<br>" from remarks
-   $lgt->{'rem'} =~ s/<br>//g;
+   # remove "<br\/>" from remarks
+   $lgt->{'rem'} =~ s/<br\/>//g;
 
    if ($lgt->{'rem'})
    {
@@ -1228,6 +1234,7 @@ for my $lgt (@lbuf)
    # Clean name field.
    $lgt->{'name'} =~ s/$NBSP/ /g;
    $lgt->{'name'} =~ s/ [ ]+/ /g;
+   $lgt->{'name'} =~ s/\.$//;
 
    # FIXME: this detection is not completely finished
    # detect front/rear detail
@@ -1275,7 +1282,7 @@ for my $lgt (@lbuf)
 
    if ($lgt->{'racon'})
    {
-      $lgt->{'racon'} =~ s/<br>//g;
+      $lgt->{'racon'} =~ s/<br\/>//g;
       $lgt->{'racon'} =~ s/$SPACES//g;
       if ($lgt->{'racon'} =~ m/<b>([A-Z]+)\(/)
       {
@@ -1418,7 +1425,7 @@ while (<STDIN>)
       }
 
       # detect broken line and buffer it (this is rare).
-      if (/(.*,) ?<br>/)
+      if (/(.*,) ?<br\/>/)
       {
          $linebuf = $1;
          next;

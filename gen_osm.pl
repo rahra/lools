@@ -38,7 +38,7 @@ while (<DBCONF>)
 }
 close DBCONF;
 
-my $dsn = "DBI:mysql:database=$dbconf{'MYSQL_DB'};host=localhost;port=3306";
+my $dsn = "DBI:mysql:database=$dbconf{'MYSQL_DB'};host=localhost;port=3306;mysql_socket=$dbconf{'MYSQL_SOCKET'}";
 my $dbh = DBI->connect($dsn, $dbconf{'MYSQL_USER'}, $dbconf{'MYSQL_PASS'}, {RaiseError => 1});
 
 my $pub_nr = `if test -e NR ; then cat NR ; fi`;
@@ -135,7 +135,7 @@ while (my $ref = $sth->fetchrow_hashref())
    }
    else
    {
-      print "      <tag k='seamark:light:ref' v='$intnr' />\n";
+      print "      <tag k='seamark:light:reference' v='$intnr' />\n";
    }
    
    if ($ref->{'error'})
