@@ -381,11 +381,11 @@ while (<STDIN>)
          $prev_line = 0;
          dprint "MATCHILL2 ($c) '$_'\n";
       }
-      # this is a special rule for first light in Pub116.....
-      elsif ($pub_nr == 116 && $1 == 6)
+      # this is a special rule for first entries in some lists...
+      elsif (($pub_nr == 116 && $1 == 6) || ($pub_nr == 114 && $1 == 9))
       {
          $prev_line = 0;
-         dprint "MATCHILL_116 ($c) '$_'\n";
+         dprint "MATCHILL_LOWNR ($c) '$_'\n";
       }
       else
       {
