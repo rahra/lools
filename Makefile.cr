@@ -34,7 +34,7 @@ $(TARGET).html: $(TARGET).pdf
 	pdftohtml -i -noframes $(TARGET).pdf > /dev/null 2>> $(LOGFILE)
 
 $(TARGET)_.html: $(TARGET).html
-	perl -pe 's/(<br>)(<\/[bi]>)/\2\1/g;s/<br>(.*?)<br>/<br>\n\1<br>\n/g;s/^(&nbsp;| )+//g;s/&nbsp;&nbsp;((([0-9]{1,3})°&nbsp;([0-9]{2,2}\.[0-9])´&nbsp;([NS]))&nbsp;(<b>([^<]*)<\/b>)(.*?)<br>)/<br>\n\1/;s/-&nbsp;-/--/' < $(TARGET).html | perl -pe 's/^(&nbsp;| )+//g;s/^\n//;' > $(TARGET)_.html 2>> $(LOGFILE)
+	perl -pe 's/&#160;/ /g;s/(<br\/>)(<\/[bi]>)/\2\1/g;s/<br\/>(.*?)<br\/>/<br\/>\n\1<br\/>\n/g;s/^(&nbsp;| )+//g;s/&nbsp;&nbsp;((([0-9]{1,3})°&nbsp;([0-9]{2,2}\.[0-9])´&nbsp;([NS]))&nbsp;(<b>([^<]*)<\/b>)(.*?)<br\/>)/<br\/>\n\1/;s/-&nbsp;-/--/' < $(TARGET).html | perl -pe 's/^(&nbsp;| )+//g;/ /g;s/^\n//;' > $(TARGET)_.html 2>> $(LOGFILE)
 
 $(TARGET)_.csv: $(TARGET)_.html
 	$(BINPATH)/conv_html_lol.pl < $(TARGET)_.html > $(TARGET)_.csv
@@ -47,7 +47,7 @@ $(TARGET).sql: $(TARGET).csv
 	$(BINPATH)/gen_sql.pl < $(TARGET).csv > $(TARGET).sql 2>> $(LOGFILE)
 
 $(TARGET).mysql: $(TARGET).sql
-	mysql -f -u$(MYSQL_USER) -p$(MYSQL_PASS) $(MYSQL_DB) < $(TARGET).sql
+	mysql -f -S $(MYSQL_SOCKET) -u$(MYSQL_USER) -p$(MYSQL_PASS) $(MYSQL_DB) < $(TARGET).sql
 	touch $(TARGET).mysql
 
 $(TARGET).osm: $(TARGET).mysql
@@ -81,7 +81,7 @@ $(TARGET)_alt.csv: $(TARGET)_.csv
 		rm $$CSV $$HTM
 
 bz2: $(TARGET).osm.bz2 $(TARGET).csv.bz2
-	
+
 clean:
 	rm -f $(TARGET).html $(TARGET)_.html $(TARGET).csv $(TARGET)_.csv $(TARGET).sql $(TARGET).mysql $(TARGET).osm $(TARGET).osm.bz2 NR
 
