@@ -1,3 +1,11 @@
+CREATE USER 'lol'@'%' IDENTIFIED WITH mysql_native_password;
+GRANT USAGE ON *.* TO 'lol'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0
+   MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+SET PASSWORD FOR 'lol'@'%' = PASSWORD('lol1234!');
+CREATE DATABASE IF NOT EXISTS `lol`;
+GRANT ALL PRIVILEGES ON `lol`.* TO 'lol'@'%';
+USE lol;
+
 -- phpMyAdmin SQL Dump
 -- version 3.2.5
 -- http://www.phpmyadmin.net
@@ -34,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `lights` (
   `usl_list` varchar(32) NOT NULL,
   `usl_nr` int(11) NOT NULL,
   `usl_subnr` char(3) NOT NULL,
-  `osm_id` int(11) NOT NULL DEFAULT '-1',
+  `osm_id` bigint(20) NOT NULL DEFAULT '-1',
   `sec_nr` int(11) NOT NULL,
   `section_name` varchar(256) NOT NULL,
   `name` varchar(256) NOT NULL,
@@ -89,12 +97,14 @@ CREATE TABLE IF NOT EXISTS `sectors` (
   `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `usl_list` varchar(32) NOT NULL,
   `usl_nr` int(11) NOT NULL,
-  `usl_subnr` char(2) NOT NULL DEFAULT '',
+  `usl_subnr` char(3) NOT NULL DEFAULT '',
   `sector_nr` int(2) unsigned NOT NULL AUTO_INCREMENT,
   `start` float DEFAULT NULL,
   `end` float DEFAULT NULL,
   `colour` enum('W','R','G','Y','Bu','Or','Vi') NOT NULL,
   `range` int(3) unsigned DEFAULT NULL,
   `visibility` enum('int','unint','') NOT NULL DEFAULT '',
-  PRIMARY KEY (`usl_list`,`usl_nr`,`usl_subnr`,`sector_nr`)
+  `osm_id` bigint(20) NOT NULL DEFAULT '-1',
+  PRIMARY KEY (`usl_list`,`usl_nr`,`usl_subnr`,`sector_nr`),
+  UNIQUE KEY `osm_id` (`osm_id`,`sector_nr`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
