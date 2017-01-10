@@ -195,7 +195,7 @@ while (my $ref = $sth->fetchrow_hashref())
    my $sector_nr;
    while (my $reg = $sti->fetchrow_hashref())
    {
-      if (($rcnt == 1) && !$reg->{'start'}) { $sector_nr = ""; }
+      if (($rcnt == 1) && ($reg->{'start'} eq '')) { $sector_nr = ""; }
       else { $sector_nr = ":" . $reg->{'sector_nr'}; }
 
       if ($reg->{'range'})
@@ -235,13 +235,12 @@ while (my $ref = $sth->fetchrow_hashref())
    }
    $sti->finish();
 
-
+   my $stype;
    if (($ref->{'typea'} eq 'buoy') || ($ref->{'typea'} eq 'beacon'))
    {
       #$ref->{'type'} = 'lateral' unless $ref->{'type'};
       $ref->{'type'} =~ s/:(.*)//;
-      my $stype = "$ref->{'typea'}_$ref->{'type'}";
-      print "      <tag k='seamark:type' v='$stype' />\n";
+      $stype = "$ref->{'typea'}_$ref->{'type'}";
       print "         <tag k='seamark:$stype:category' v='$1' />\n" if $1;
       # FIXME: buoyage system should have a defined tag.
       print "         <tag k='seamark:$stype:system' v='$ref->{'bsystem'}' />\n" if $ref->{'bsystem'};
@@ -269,8 +268,10 @@ while (my $ref = $sth->fetchrow_hashref())
    }
    else
    {
-      print "      <tag k='seamark:type' v='light_$ref->{'typea'}' />\n";
+      $stype = "light_$ref->{'typea'}";
    }
+
+   print "      <tag k='seamark:type' v='$stype' />\n";
 
    # FIXME: is this topmark definition correct?
    if ($ref->{'topmark'})
@@ -293,7 +294,7 @@ while (my $ref = $sth->fetchrow_hashref())
    {
       $ref->{'height_landm'} /= 3.28095;
       my $lmh = sprintf("%.0f", $ref->{'height_landm'});
-      print "      <tag k='seamark:landmark:height' v='$lmh' />\n";
+      print "      <tag k='seamark:$stype:height' v='$lmh' />\n";
    }
 
    print "   </node>\n";
