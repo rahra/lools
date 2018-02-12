@@ -1,5 +1,10 @@
 
 DESCRIPTION
+This is a set of scripts which parses the NGA List of Lights publications
+which are published as PDF files into SQL format and finally into OSM files
+fitting the "seamark:*" nautical tagging scheme defined by OpenSeamap and
+OpenNauticalChart.
+
 This is a very quick HOWTO on the "List of Lights" text processor.
 
 
@@ -9,8 +14,8 @@ PREREQUISITES
 you just want to generate a CSV or XML, a mysql is not needed.
 
 2) You need the original list of lights PDF documents of the US NGA. Those are
-found at www.nga.mil/maritime. Download the files you need and copy them into
-this directory. The files are named /Pub11?bk.pdf/.
+found at https://msi.nga.mil/NGAPortal/MSI.portal. Download the files you need
+and copy them into this directory. The files are named /Pub11?bk.pdf/.
 
 3) Perl must be installed on your machine. Version 5.8 or higher is
 recommended.
@@ -41,11 +46,11 @@ creation information.
 EXECUTE SCRIPTS AND GENERATE CVS/OSM FILES
 
 1) Now just type 'make'. It should process all PDFs automatically. The result
-is several new files: CSV, SQL and OSM (and some temporary files).
+are several new files: CSV, SQL and OSM (and some temporary files).
 The CSV is a TAB-separated file containing the lights information tabulated.
 The XML file contains the same information in raw XML.  The SQL file contains
 the same information but in SQL statements. The OSM (which is more than just
-raw XML) file contains the same inforamtion and can be loaded into josm.
+raw XML) file contains the same information and can be loaded into josm.
 
 2) To generate a world OSM file containing all lights just run the perl script
 `./gen_osm.pl > world.osm`. It reads all data out of the mysql and converts
@@ -65,7 +70,7 @@ Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
 
 COPYING
 
-/* Copyright 2010,2011 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+/* Copyright 2010-2018 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * This file is part of Lools (List of Light Tools).
  *
